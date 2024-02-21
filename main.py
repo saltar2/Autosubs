@@ -16,4 +16,4 @@ for aud in audio_files:
 
 
 end_time=time.time()
-print("Tiempo total : "+str((end_time-start_time)/60))
+print("Tiempo total : "+str((end_time-start_time)/60)+" minutos")

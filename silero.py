@@ -15,12 +15,12 @@ def silero_vad(audio_path,vad_threshold,chunk_threshold):
         fflags="+bitexact",
     ).overwrite_output().run(quiet=True)
 
-    print("Running VAD...")
+    
     torch.set_num_threads(1)
     model, utils = torch.hub.load(
         repo_or_dir="snakers4/silero-vad", model="silero_vad", onnx=False
     )
-
+    print("Running VAD...")
     (get_speech_timestamps, save_audio, read_audio, VADIterator, collect_chunks) = utils
 
     # Generate VAD timestamps

@@ -12,9 +12,14 @@ WORKDIR /app
 # Copia todo el contenido excepto lo especificado en .dockerignore
 COPY . .
 
+#instalamos dependencias
 
-RUN pip install torch torchaudio
-RUN pip install srt languagecodes numpy configparser tqdm ffmpeg-python
-RUN pip install deepgram-sdk==2.5.0  deepl
+#RUN pip3 install srt languagecodes numpy configparser tqdm ffmpeg-python
+#RUN pip3 install deepgram-sdk==2.5.0  deepl
+RUN pip3 install -r requirements.txt
+RUN pip3 install torch torchaudio --index-url https://download.pytorch.org/whl/cpu
 RUN apt autoclean
+#Pre-descargamos el modelo de silero
+RUN python3 -c "import torch; torch.hub.load(repo_or_dir='snakers4/silero-vad', model='silero_vad', onnx=False)" 
+
     
