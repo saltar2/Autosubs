@@ -1,4 +1,4 @@
-import torch, whisper,os,deepl_tr,deepgram_tr,silero
+import torch,os,deepl_tr,deepgram_tr,silero
 from tqdm import tqdm
 
 
