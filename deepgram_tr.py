@@ -8,7 +8,7 @@ language_codes = {
     "chinese": ["zh"],
     "danish": ["da"],
     "dutch": ["nl"],
-    "english": ["en"],
+    "english": ["en-US"],
     "flemish": ["nl"],
     "french": ["fr"],
     "german": ["de"],
@@ -78,7 +78,7 @@ def deepgram_tr(u, model_size,audio_nombre,language):
                 
 
                # Set start timestamp
-                start = r["start"] + u[chunk_index][0]["offset"]
+                start = r["start"] + u[chunk_index][0]["offset"]#el u es el valor del inicio del archivo de audio y r[start] es el offset de cuando empieza la transcripcion
                 for j in range(len(u[chunk_index])):
                     if (
                         r["start"] >= u[chunk_index][j]["chunk_start"]
@@ -88,7 +88,7 @@ def deepgram_tr(u, model_size,audio_nombre,language):
                         break
 
                 # Set end timestamp
-                end = u[chunk_index][-1]["end"] + 0.5
+                end = u[chunk_index][-1]["end"] + 0.3
                 for j in range(len(u[chunk_index])):
                     if r["end"] >= u[chunk_index][j]["chunk_start"] and r["end"] <= u[chunk_index][j]["chunk_end"]:
                         end = r["end"] + u[chunk_index][j]["offset"]
