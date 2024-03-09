@@ -26,12 +26,12 @@ def silero_vad(audio_path,vad_threshold,chunk_threshold):
     # Generate VAD timestamps
     VAD_SR = 16000
     wav = read_audio("vad_chunks/silero_temp.wav", sampling_rate=VAD_SR)
-    t = get_speech_timestamps(wav, model, sampling_rate=VAD_SR, threshold=vad_threshold)
+    t = get_speech_timestamps(wav, model, sampling_rate=VAD_SR, threshold=vad_threshold,min_speech_duration_ms=500)
 
     # Add a bit of padding, and remove small gaps
     for i in range(len(t)):
-        t[i]["start"] = max(0, t[i]["start"] - 3200)  # 0.2s head
-        t[i]["end"] = min(wav.shape[0] - 16, t[i]["end"] + 12800)  # 0.8s tail
+        t[i]["start"] = max(0, t[i]["start"] - 4800)  # 0.3s head
+        t[i]["end"] = min(wav.shape[0] - 16, t[i]["end"] + 11200)  # 0.7s tail
         if i > 0 and t[i]["start"] < t[i - 1]["end"]:
             t[i]["start"] = t[i - 1]["end"]  # Remove overlap
 
@@ -57,19 +57,33 @@ def silero_vad(audio_path,vad_threshold,chunk_threshold):
 
     # Convert timestamps to seconds
     for i in range(len(u)):
+        offset = 0.0
+        for j in range(len(u[i])):
+            u[i][j]["start"] /= VAD_SR#valor absoluto
+            u[i][j]["end"] /= VAD_SR#valor absoluto
+
+            if j == 0:
+                offset = u[i][j]["start"]
+                
+            u[i][j]["offset"] = offset
+
+            u[i][j]["chunk_start"] = u[i][j]["start"]-offset#valor relativo al fragmento de audio
+
+            u[i][j]["chunk_end"] = u[i][j]["end"]-offset#valor relativo al fragmento de audio
+    
+    return u
+
+''' for i in range(len(u)):
         time = 0.0
         offset = 0.0
         for j in range(len(u[i])):
-            u[i][j]["start"] /= VAD_SR
-            u[i][j]["end"] /= VAD_SR
-            u[i][j]["chunk_start"] = time
-            time += u[i][j]["end"] - u[i][j]["start"]
+            u[i][j]["start"] /= VAD_SR#valor absoluto
+            u[i][j]["end"] /= VAD_SR#valor absoluto
+            u[i][j]["chunk_start"] = time#valor relativo al fragmento de audio
+            time += u[i][j]["end"] - u[i][j]["start"]#valor relativo al fragmento de audio
             u[i][j]["chunk_end"] = time
             if j == 0:
                 offset += u[i][j]["start"]
             else:
                 offset += u[i][j]["start"] - u[i][j - 1]["end"]
-            u[i][j]["offset"] = offset
-
-    
-    return u
+            u[i][j]["offset"] = offset'''

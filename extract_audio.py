@@ -52,10 +52,10 @@ def extract_audio_ffmpeg_v2(input_dir,language):
 
         # Extract audio to intermediate file using original codec
         intermediate_audio_path = os.path.join(input_dir, f"{os.path.splitext(video_file)[0]}_{audio_codec}.{audio_codec}")
-        subprocess.run(["ffmpeg", "-i", video_path, "-vn", "-acodec", "copy", "-map", f"0:{audio_stream_index}", intermediate_audio_path])
+        subprocess.run(["ffmpeg", "-i", video_path, "-vn", "-acodec", "copy", "-map", f"0:{audio_stream_index}","-y", intermediate_audio_path])
 
         # Convert intermediate file to WAV
-        subprocess.run(["ffmpeg", "-i", intermediate_audio_path, "-acodec", "pcm_s16le", "-ar", "44100", "-ac", "2", output_audio_path])
+        subprocess.run(["ffmpeg", "-i", intermediate_audio_path, "-acodec", "pcm_s16le", "-ar", "44100", "-ac", "2","-y", output_audio_path])
 
         # Remove intermediate file
         os.remove(intermediate_audio_path)

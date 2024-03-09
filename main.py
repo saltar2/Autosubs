@@ -3,8 +3,9 @@ import transcription_translation as trtr,extract_audio,time,os
 
 #lan='japanese'
 lan='english'
-current_directory="E:\Autosubs\TFG_compartido"#para escritorio
-#current_directory="/app/Pruebas"#para docker
+#current_directory="E:\Autosubs\TFG_compartido"#para escritorioy
+
+current_directory=os.path.join(os.getcwd(), "TFG_compartido")
 
 start_time=time.time()
 extract_audio.extract_audio_ffmpeg_v2(current_directory,lan)
@@ -15,4 +16,4 @@ for aud in audio_files:
     trtr.main(os.path.join(current_directory,aud),lan)
 
 end_time=time.time()
-print("Tiempo total : "+str((end_time-start_time)/60)+" minutos")
+print("Tiempo total : "+str((end_time-start_time)/60)+" minutos") 

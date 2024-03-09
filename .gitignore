@@ -5,4 +5,5 @@
 Prueba*
 TFG_compartido*
 vad_chunks*
-deepgram_transcription_nova-2.json
+*.json
+rnnoise*

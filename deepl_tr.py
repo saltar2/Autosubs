@@ -7,12 +7,9 @@ config.read('.env')
 deepl_authkey=config.get('API_KEYS','DEEPL_KEY')
 
 # DeepL translation
-def deepl_tr(subs,out_path_pre,out_path,language,deepl_target_lang,model_size): 
+def deepl_tr(subs,out_path,language,deepl_target_lang,model_size): 
     print("Translating...")
-    with open(out_path_pre, "w", encoding="utf8") as f:
-        f.write(srt.compose(subs))
-    print("(Untranslated subs saved to", out_path_pre, ")")
-
+    
     lines = []
     punct_match = ["。", "、", ",", ".", "〜", "！", "!", "？", "?", "-"]
     for i in range(len(subs)):#añadimos distinta puntuacion si es japones o no
@@ -45,8 +42,8 @@ def deepl_tr(subs,out_path_pre,out_path,language,deepl_target_lang,model_size):
             x = ["\n".join(n).strip()]
             if language.lower() == "japanese":
                 result = translator.translate_text(x, source_lang="JA", target_lang=deepl_target_lang)
-            else:
-                result = translator.translate_text(x, target_lang=deepl_target_lang)
+            else:#default language
+                result = translator.translate_text(x,source_lang='EN', target_lang=deepl_target_lang)
             english_tl = result[0].text.strip().splitlines()
             assert len(english_tl) == len(n), ("Invalid translation line count ("+ str(len(english_tl))+ " vs "+ str(len(n))+ ")")
             if i != 0:
@@ -94,26 +91,5 @@ def translate_language_name(language_name):
     except ValueError:
         print(f"No se encontró el código ISO 639-2/B para el idioma: {language_name}")
         return None
-'''
-system_prompt = "You are a helpful assistant for the company ZyntriQix. Your task is to correct any spelling discrepancies in the transcribed text. Make sure that the names of the following products are spelled correctly: ZyntriQix, Digique Plus, CynapseFive, VortiQore V8, EchoNix Array, OrbitalLink Seven, DigiFractal Matrix, PULSE, RAPT, B.R.I.C.K., Q.U.A.R.T.Z., F.L.I.N.T. Only add necessary punctuation such as periods, commas, and capitalization, and use only the context provided."
 
-def generate_corrected_transcript(temperature, system_prompt, audio_file):
-    response = client.chat.completions.create(
-        model="gpt-4",
-        temperature=temperature,
-        messages=[
-            {
-                "role": "system",
-                "content": system_prompt
-            },
-            {
-                "role": "user",
-                "content": transcribe(audio_file, "")
-            }
-        ]
-    )
-    return response['choices'][0]['message']['content']
-    
-corrected_text = generate_corrected_transcript(0, system_prompt, fake_company_filepath)
-'''
 

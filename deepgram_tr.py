@@ -1,5 +1,5 @@
 
-import configparser,concurrent.futures,time,srt,datetime,deepgram as d,json
+import configparser,concurrent.futures,time,srt,datetime,deepgram as d,json,os
 from tqdm import tqdm
 
 config=configparser.ConfigParser()
@@ -8,7 +8,7 @@ language_codes = {
     "chinese": ["zh"],
     "danish": ["da"],
     "dutch": ["nl"],
-    "english": ["en-US"],
+    "english": ["en"],
     "flemish": ["nl"],
     "french": ["fr"],
     "german": ["de"],
@@ -36,7 +36,7 @@ def process_chunk(chunk_index,aud_name, dg_client, size,language):#funcion petic
         try:
             with open(f"vad_chunks/{aud_name}.wav", "rb") as f:
                 source = {'buffer': f, 'mimetype': 'audio/wav'}
-                options = {"model": size, "language": lan, "utterances": True, "timeout": 600}
+                options = {"model": size, "language": lan, "utterances": True,"smart_format": True, "timeout": 600}
                 response = dg_client.transcription.sync_prerecorded(source, options)
 
             if len(response["results"]["utterances"]) > 0:
@@ -59,40 +59,47 @@ def deepgram_tr(u, model_size,audio_nombre,language):
     dg_client = d.Deepgram(auth_key)
     subs = []
     sub_index = 1
-    segment_info = []
+    #segment_info = []
     
 
     print("Running Deepgram")
     output = "deepgram_transcription_"+model_size+".json" #json donde se puede ver las transcripciones
-
+    if(os.path.exists(output)):#borramos el archivo de la ejecucion anterior
+        os.remove(output)
+    all_results = {}#debug file
     with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
         futures = [executor.submit(process_chunk,i, f"{audio_nombre}_{i}", dg_client, model_size,language) for i in range(len(u))]
+
+        #completed_futures, _ = concurrent.futures.wait(futures)
+
         for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures)):
             chunk_index, chunk_results = future.result()
-            
+
+            all_results[chunk_index]=chunk_results
+
             for r in chunk_results:
                 if r["start"] > u[chunk_index][-1]["chunk_end"]:
                     continue
 
-                segment_info.append(r)#debug file
+                #segment_info.append(r)#debug file
                 
-
                # Set start timestamp
                 start = r["start"] + u[chunk_index][0]["offset"]#el u es el valor del inicio del archivo de audio y r[start] es el offset de cuando empieza la transcripcion
-                for j in range(len(u[chunk_index])):
+                '''for j in range(len(u[chunk_index])):
                     if (
                         r["start"] >= u[chunk_index][j]["chunk_start"]
                         and r["start"] <= u[chunk_index][j]["chunk_end"]
                     ):
                         start = r["start"] + u[chunk_index][j]["offset"]
-                        break
+                        break'''
 
                 # Set end timestamp
-                end = u[chunk_index][-1]["end"] + 0.3
+                end=r["end"]+ u[chunk_index][0]["offset"]
+                '''end = u[chunk_index][-1]["end"] + 0.3#ultimo valor de end
                 for j in range(len(u[chunk_index])):
                     if r["end"] >= u[chunk_index][j]["chunk_start"] and r["end"] <= u[chunk_index][j]["chunk_end"]:
                         end = r["end"] + u[chunk_index][j]["offset"]
-                        break
+                        break'''
 
                 # Add to SRT list
                 subs.append(srt.Subtitle(
@@ -102,8 +109,13 @@ def deepgram_tr(u, model_size,audio_nombre,language):
                         content=r["transcript"].strip(),))
                 
                 sub_index += 1
-                
-    with open(output, "w", encoding='utf-8') as out:
-        out.write(json.dumps(segment_info, indent=4))
 
+        # Ordenar all_results por las claves (chunk_index)
+        sorted_results = dict(sorted(all_results.items(), key=lambda item: int(item[0])))
+    
+        with open(output, "a", encoding='utf-8') as out:
+            out.write(json.dumps(sorted_results, indent=4))        
+       
     return subs
+
+
