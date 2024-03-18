@@ -6,11 +6,11 @@ def main(audio_path,language):
 
     transcription=True
     transcription_mode=2 # mode 2 deepgram 
-
     translation=True
     denoise=True
     better_formating=False
     ####deepgram models
+    # si usas otro modelo mira max workers en deepgram_tr.py
     model_size="nova-2"
     #model_size="base"
     #model_size="enhaced"
@@ -19,8 +19,8 @@ def main(audio_path,language):
     #model_size="whisper-large"
 
     # @markdown Advanced settings:
-    vad_threshold = 0.65  # @param {type:"number"} umbral de decision si hay audio de 0 a 1
-    chunk_threshold = 0.3  # @param {type:"number"} maxima longitud de silencio entre fragmentos de audio
+    vad_threshold = 0.6  # @param {type:"number"} umbral de decision si hay audio de 0 a 1
+    chunk_threshold = 0.1  # @param {type:"number"} maxima longitud de silencio entre fragmentos de audio
     deepl_target_lang = "ES"  
     max_attempts = 3  
     assert max_attempts >= 1
@@ -45,7 +45,7 @@ def main(audio_path,language):
             denoiser.denoise(audio_path,audio_path2)
         u=silero.silero_vad(audio_path2,vad_threshold,chunk_threshold)#u es la lista de chunks procesados por silero
         subs=[]
-
+        
         try:
             if(transcription_mode==2):
                 subs=deepgram_tr.deepgram_tr(u,model_size,audio_nombre,language)

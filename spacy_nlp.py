@@ -13,7 +13,7 @@ config.read('.env')
 nlp = spacy.load("es_dep_news_trf")
 #nlp = spacy.load("es_core_web_sm")
 matcher = Matcher(nlp.vocab)
-
+punt_matcher=Matcher(nlp.vocab)
 # Lista de reglas gramaticales
 '''    Artículo + sintagma nominal
     Preposición + sintagma nominal
@@ -22,7 +22,7 @@ matcher = Matcher(nlp.vocab)
     Partes de una forma verbal
     Adverbios de negación + verbo
     Preposición + sintagma verbal'''
-'''
+
 grammatical_rules = [
     {"label": "component", "pattern": [{"pos": {"in": ["DET"]}, "dep": {"in": ["nsubj", "obj"]}}]},
     {"label": "component", "pattern": [{"pos": {"in": ["ADP"]}, "dep": {"in": ["nsubj", "obj"]}}]},
@@ -31,28 +31,36 @@ grammatical_rules = [
     {"label": "component", "pattern": [{"pos": {"in": ["VERB"]}, "dep": "ROOT"}]},
     {"label": "component", "pattern": [{"pos": {"in": ["ADV"]}, "dep": "ROOT"}]},
     {"label": "component", "pattern": [{"pos": {"in": ["ADP"]}, "dep": "ROOT"}]},
-]'''
-grammatical_rules = [
-    {"label": "component", "pattern": [{"pos": {"in": ["DET"]}, "dep": {"in": ["nsubj", "obj"]}}]},
-    {"label": "component", "pattern": [{"pos": {"in": ["ADP"]}, "dep": {"in": ["nsubj", "obj"]}}]},
-    {"label": "component", "pattern": [{"pos": {"in": ["CONJ"]}, "dep": "ROOT"}]},
-    {"label": "component", "pattern": [{"pos": {"in": ["PRON"]}, "dep": {"in": ["nsubj", "obj"]}}]},
-    {"label": "component", "pattern": [{"pos": {"in": ["VERB"]}, "dep": "ROOT"}]},
-    {"label": "component", "pattern": [{"pos": {"in": ["ADV"]}, "dep": "ROOT"}]},
-    {"label": "component", "pattern": [{"pos": {"in": ["ADP"]}, "dep": "ROOT"}]},
-    {"label": "component", "pattern": [{"pos": {"in": ["NOUN"]}, "dep": {"in": ["nsubj", "obj"]}}]},  # Sintagma verbal
-    {"label": "component", "pattern": [{"pos": "ADJ"}, {"dep": {"in": ["nsubj", "amod"]}}]},  # Sintagma adjetival
-    {"label": "component", "pattern": [{"pos": {"in": ["PRON"]}, "dep": "nsubj"}, {"dep": "ROOT"}]},  # Oración subordinada sustantiva
-    {"label": "component", "pattern": [{"pos": {"in": ["PRON"]}, "dep": "nsubj"}, {"pos": "AUX"}, {"pos": "VERB"}]},  # Oración subordinada adjetiva
-    {"label": "component", "pattern": [{"ORTH": ","}]},  # Match para coma
-    {"label": "component", "pattern": [{"ORTH": "."}]}  # Match para punto
+    {"label": "component", "pattern": [{"ORTH": "¡"}]},#signos lado izquierdo
+    {"label": "component", "pattern": [{"ORTH": "¿"}]}
 ]
 
+puntuation_rules=[
+    {"label": "component", "pattern": [{"ORTH": ","}]},  # Match para coma
+    {"label": "component", "pattern": [{"ORTH": "."}]},  # Match para punto
+    {"label": "component", "pattern": [{"ORTH": "!"}]}, #signos lado derecho
+    {"label": "component", "pattern": [{"ORTH": "?"}]},
+    {"label": "component", "pattern": [{"ORTH": ";"}]},
+    {"label": "component", "pattern": [{"ORTH": ":"}]}
+]
+for rule in puntuation_rules:
+    punt_matcher.add(rule["label"], [rule["pattern"]])
 
 for rule in grammatical_rules:
     matcher.add(rule["label"], [rule["pattern"]])
 
+def ajustar_duraciones(new_subtitles, margin=0.05):
+    for i in range(1, len(new_subtitles) - 1):
+        current_subtitle = new_subtitles[i]
+        previous_subtitle = new_subtitles[i - 1]
+        next_subtitle = new_subtitles[i + 1]
 
+        if current_subtitle.end - current_subtitle.start < srt.timedelta(seconds=1):
+            # Verifica si hay espacio para ajustar el inicio y el final
+            if (current_subtitle.start - previous_subtitle.end).total_seconds() >= margin and (next_subtitle.start - current_subtitle.end).total_seconds() >= margin:
+                # Ajusta el inicio y el final del subtítulo
+                current_subtitle.start -= srt.timedelta(seconds=0.2)
+                current_subtitle.end += srt.timedelta(seconds=0.3)
 
 def obtener_longitudes_palabras(texto):
     palabras = texto.split()
@@ -98,20 +106,27 @@ def calcular_suma_acumulativa(texto, max_chars, margin):
         suma_acumulativa.append(suma_temporal)
 
     return suma_acumulativa
-
-def split_sentence_v3(sentence, duration, max_chars, min_duration, margin):
+def puntuation(doc, max_chars, margin):
+    
+    
+    return None
+def split_sentence_v3(sentence, max_chars, margin):
     doc = nlp(sentence)
+
+    pun_matches= sorted((start, end) for _, start, end in punt_matcher(doc))
+
     matches = sorted((start, end) for _, start, end in matcher(doc))#lista de matchs
     '''
     Ejemplo para entender matches:
-        'The octopus is a rather strange looking animal that exhibits amazingly complex behaviors.'
-        En esa oracion los matches son : [(7, 9), (8, 9), (13,14)] que se corres ponden con : 'looking animal' , 'that' y '.'
+        'El pulpo es un animal de aspecto bastante extraño que exhibe comportamientos asombrosamente complejos.'
+        '0 El 1 pulpo 2 es 3  un 4 animal 5 de 6 aspecto 7 bastante 8 extraño 9 que 10 exhibe 11 comportamientos 12 asombrosamente 13 complejos 14 . 15'
+        En esa oracion los matches son : [(1, 2), (8, 10), (9, 10), (11, 12)] que se corres ponden con : 'pulpo' , 'extraño que' , 'que' , 'comportamientos' 
 '''
 
     fragments = []
-    start_idx = 0
+    
 
-    # Si hay solo una coincidencia, dividir en función de esa coincidencia
+    '''# Si hay solo una coincidencia, dividir en función de esa coincidencia
     if len(matches) == 1000:
         start, end = matches[0]
         length = end - start
@@ -121,38 +136,56 @@ def split_sentence_v3(sentence, duration, max_chars, min_duration, margin):
             fragments.append(doc[start_idx:start].text)
             start_idx = start
         fragments.append(doc[start_idx:].text)
-        return fragments
+        return fragments'''
 
     # Si hay más de una coincidencia, elegir las que proporcionen la mejor división
-    elif len(matches) >= 1:
+    if len(matches) >= 1:
         suma_acumulativa = calcular_suma_acumulativa(doc.text, max_chars, margin)[:-1]  # Grupos pseudoideales
         # se resta 1 porque el ultimo valor no tiene significado al  ser la ultima palabra
         if(len(suma_acumulativa)==0):#caso linea mayor a max_chars pero menor a max_char+margin
             return [doc.text]
         #creamos una matriz nº matches * nº cortes pseudoideales
         all_distances = np.zeros((len(matches), len(suma_acumulativa)))  # Matriz para almacenar las distancias de cada match con respecto a la suma acumulativa
-
-        min_distance = float('inf')
+        all_distances_punt=np.zeros((len(pun_matches), len(suma_acumulativa))) 
+        #min_distance = float('inf')
         for idx, (start, _) in enumerate(matches):
             # Se resta 1 en suma porque devuelve la posición de 1 hasta n
             # y en matches las posiciones del match están de 0 hasta n-1
             distances = [abs((suma - 1) - start) for suma in suma_acumulativa]#lista de distancias de 1 matche a n cortes pseudoideal
                 
             all_distances[idx] = distances
-            sub_min = min(distances)
-            if sub_min < min_distance:
-                min_distance = sub_min
+
+        for idx, (_, end) in enumerate(pun_matches):
+            # Se resta 1 en suma porque devuelve la posición de 1 hasta n
+            # y en matches las posiciones del match están de 0 hasta n-1
+            distances = [abs((suma - 1) - end) for suma in suma_acumulativa]#lista de distancias de 1 matche a n cortes pseudoideal
+                
+            all_distances_punt[idx] = distances
+
 
 
         all_distances_t=all_distances.T#ponemos por filas el corte y por columnas los matches para ver cual es el mas ideal
-
+        all_distances_punt_t=all_distances_punt.T
         unique_indices = []
 
         # Obtener el índice del mejor match para cada columna de all_distances_t
         
-        for column_distances in all_distances_t:
-            best_match_index = np.argmin(column_distances)
-            index = matches[best_match_index][0]
+        for idx, _ in enumerate(all_distances_t):
+            best_match_index = np.argmin(all_distances_t[idx])#argmin devuelve el indice del valor minimo
+            best_match_pun_index = np.argmin(all_distances_punt_t[idx])
+
+            min_value_match=all_distances_t[best_match_index]
+            min_value_pun_match=all_distances_punt_t[best_match_pun_index]
+            min_dist_index=int(np.min([min_value_match,min_value_pun_match]))
+            #falta corregir de aqui ao final da funcion.
+            matches_final=[]
+            if(min_dist_index==best_match_index):
+                matches_final=matches
+            else:
+                matches_final=pun_matches
+
+            index = matches_final[min_dist_index][0]
+
             if index not in unique_indices:#esta condicion es para asegurarnos de usar el match solo 1 vez
                 unique_indices.append(index)
         
@@ -160,19 +193,29 @@ def split_sentence_v3(sentence, duration, max_chars, min_duration, margin):
         # Convertir la lista de índices únicos a una lista
         best_match_indices = list(unique_indices)
 
+        if len(best_match_indices)==1:
+            fragments.append(doc[0:best_match_indices[0]].text+"\n"+doc[best_match_indices[0]:].text)
+        else:
+            start_idx = 0
+            start=0
+            while(start_idx+1<len(best_match_indices)):
+                if(start==start_idx):
+                    fragments.append(doc[start_idx:best_match_indices[start_idx]].text+"\n"
+                                     +doc[best_match_indices[start_idx]:best_match_indices[start_idx+1]].text)#
+                    start_idx = start_idx+1
+                else:    
+                    fragments.append(doc[best_match_indices[start_idx]:best_match_indices[start_idx+1]].text+"\n"
+                                     +doc[best_match_indices[start_idx+1]:best_match_indices[start_idx+2]].text)#se fragmenta el texto desde donde indica start hasta best_match, este no incluido
+                    start_idx = start_idx+2              
 
-        for best_match in best_match_indices:#usamos los match seleccionados para cortar el texto
-            fragments.append(doc[start_idx:best_match].text)#se fragmenta el texto desde donde indica start hasta best_match, este no incluido
-            start_idx = best_match
-
-        # Añadir el último fragmento
-        fragments.append(doc[start_idx:].text)
-
+            # Añadir el último fragmento
+            if(len(best_match_indices)%2==0):
+                fragments.append(doc[best_match_indices[start_idx]:].text)
 
         return fragments
     
     elif len(matches)==0:
-        return [doc.text ]
+        return [doc.text]
 
 
 def dividir_lineas_v2(input_file, output_file):#main function
@@ -190,7 +233,7 @@ def dividir_lineas_v2(input_file, output_file):#main function
         #print("Subtitle ----- >> "+str(subtitle.index))
         # Aplica el matcher solo si la longitud del subtítulo supera los max_characters
         if len(text) > max_characters:
-            lines = split_sentence_v3(text, subtitle.end.total_seconds() - subtitle.start.total_seconds(),max_characters,min_duration,margin)
+            lines = split_sentence_v3(text,max_characters,margin)
             #lines=divide_oraciones_with_gpt(text, subtitle.end.total_seconds() - subtitle.start.total_seconds())
         else:
             lines = [text]
@@ -211,15 +254,15 @@ def dividir_lineas_v2(input_file, output_file):#main function
 
             subtitle.start = new_subtitle.end
 
-    #ajustar_duraciones(new_subtitles)
+    ajustar_duraciones(new_subtitles)
     print("End formating subs")
     with open(output_file, "w", encoding="utf-8") as out_file:
         out_file.write(srt.compose(new_subtitles))
 
 
 '''def main():
-    dividir_lineas_v2("TFG_compartido\How octopuses battle each other _ DIY Neuroscience, a TED series (1080p_24fps_H264-128kbit_AAC).eng.deepgram_nova-2_transcription.srt",
-                   "TFG_compartido\\How octopuses battle each other _ DIY Neuroscience, a TED series (1080p_24fps_H264-128kbit_AAC).eng.deepgram_nova-2_transcription_formated.srt")
+    dividir_lineas_v2("TFG_compartido\How octopuses battle each other _ DIY Neuroscience, a TED series (1080p_24fps_H264-128kbit_AAC).spa.deepgram_nova-2.srt",
+                   "TFG_compartido\How octopuses battle each other _ DIY Neuroscience, a TED series (1080p_24fps_H264-128kbit_AAC).spa.deepgram_nova-2_formated.srt")
 
 
 main()'''
