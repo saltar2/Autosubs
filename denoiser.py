@@ -65,16 +65,16 @@ def frame_generator(frame_duration_ms,
         yield audio[offset:offset + n]
         offset += n        
 
-def denoise(input,output):
+def denoise(input,i,output):
     #init()     
     denoiser = RNNoise()    
-    print("Denoising ...")
+    
     wav_path=input
     #wav_path = 'Pruebas/output.wav'
 
 
     TARGET_SR = 48000
-    TEMP_FILE = 'test.wav'
+    TEMP_FILE = f"test_{i}.wav"
 
     sound = AudioSegment.from_wav(wav_path)
     sound = sound.set_frame_rate(TARGET_SR)
@@ -94,6 +94,7 @@ def denoise(input,output):
     denoised_wav = np.concatenate([np.frombuffer(frame,
                                                 dtype=np.int16)
                                 for frame in denoised_frames])
+    os.remove(TEMP_FILE)
 
     wavfile.write(output,
                 TARGET_SR,

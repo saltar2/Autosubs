@@ -1,6 +1,10 @@
-import torch,os,deepl_tr,deepgram_tr,silero,spacy_nlp,srt,denoiser
+import torch,os,deepl_tr,deepgram_tr,silero,spacy_nlp,srt,denoiser,concurrent.futures
 from tqdm import tqdm
 
+def process_frag(i,aud_name):
+    with open(f"vad_chunks/{aud_name}.wav", "rb") as f:
+        #"vad_chunks/{aud_name}_d.wav"
+        denoiser.denoise(f,i,f)
 
 def main(audio_path,language):
 
@@ -8,6 +12,7 @@ def main(audio_path,language):
     transcription_mode=2 # mode 2 deepgram 
     translation=True
     denoise=True
+    denoise_ant=False
     better_formating=False
     ####deepgram models
     # si usas otro modelo mira max workers en deepgram_tr.py
@@ -39,11 +44,20 @@ def main(audio_path,language):
 
     if(transcription):
         audio_path2=audio_path
-        if(denoise):
+        if(denoise and denoise_ant):
             audio_path2=out_path_pre+"_denoised.wav"
             audio_nombre+="_denoised"
             denoiser.denoise(audio_path,audio_path2)
+        #print(audio_path2)
         u=silero.silero_vad(audio_path2,vad_threshold,chunk_threshold)#u es la lista de chunks procesados por silero
+        if(denoise and denoise_ant==False):
+            #procesamos los fragmentos para quitarles el ruido
+            print("Denoising ...")
+            with concurrent.futures.ProcessPoolExecutor(max_workers=10) as executor:
+                 futures=[executor.submit(process_frag,i, f"{audio_nombre}_{i}") for i in range(len(u))]
+                 for _ in tqdm(concurrent.futures.as_completed(futures), total=len(futures)):
+                     pass
+
         subs=[]
         
         try:
@@ -67,7 +81,7 @@ def main(audio_path,language):
         except Exception as e:
             print(e)
 
-        finally:
+        '''finally:
             # Eliminar todos los archivos en la carpeta vad_chunks
             for filename in os.listdir("vad_chunks"):
                 file_path = os.path.join("vad_chunks", filename)
@@ -75,7 +89,7 @@ def main(audio_path,language):
                     if os.path.isfile(file_path):
                         os.unlink(file_path)
                 except Exception as e:
-                    print(f"No se pudo eliminar {file_path}: {e}")
+                    print(f"No se pudo eliminar {file_path}: {e}")'''
 
 if __name__ == '__main__':
     main()

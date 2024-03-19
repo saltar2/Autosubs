@@ -30,7 +30,8 @@ def deepl_tr(subs,out_path,language,deepl_target_lang,model_size):
     english_lines = []
     
   
-
+    #vamos agrupar por idioma detectado
+    #https://github.com/pemistahl/lingua-py/tree/main
     detector=LanguageDetectorBuilder.from_all_spoken_languages().build()
     example_lines=detector.detect_languages_in_parallel_of(lines)
     def_language=language
