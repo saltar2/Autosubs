@@ -18,7 +18,8 @@ lib.rnnoise_process_frame.argtypes = [ctypes.c_void_p,ctypes.POINTER(ctypes.c_fl
 lib.rnnoise_process_frame.restype = ctypes.c_float
 lib.rnnoise_create.restype = ctypes.c_void_p
 lib.rnnoise_destroy.argtypes = [ctypes.c_void_p]
-
+#original repo
+#https://github.com/xiph/rnnoise
 # borrowed from here 
 # https://github.com/Shb742/rnnoise_python
 class RNNoise(object):
