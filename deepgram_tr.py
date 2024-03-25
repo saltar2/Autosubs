@@ -14,7 +14,7 @@ def process_chunk(chunk_index,aud_name, dg_client, size,language):#funcion petic
             with open(f"vad_chunks/{aud_name}.wav", "rb") as f:
                 source = {'buffer': f, 'mimetype': 'audio/wav'}
                 #options = {"model": size, "language": lan, "utterances": True,"smart_format": True, "timeout": 600}
-                options = {"model": size, "detect_language": True, "utterances": True, "timeout": 600, "diarize" : True}
+                options = {"model": size, "detect_language": True, "utterances": True, "timeout": 600, "diarize" : True,"smart_format":True}
                 response = dg_client.transcription.sync_prerecorded(source, options)
 
             if len(response["results"]["utterances"]) > 0:
