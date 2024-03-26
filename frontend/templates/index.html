@@ -3,44 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subir y Procesar Videos</title>
+    <title>Autosubs</title>
     <!-- Enlace al archivo CSS de Bulma -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
     <!-- Estilos personalizados -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
 </head>
 <body>
+    <nav class="navbar is-primary" role="navigation" aria-label="main navigation">
+        <div class="navbar-brand">
+            <!-- Botón de inicio -->
+            <a class="navbar-item" href="/">
+                <strong>Home</strong>
+            </a>
+        </div>
+    </nav>
     <section class="section">
         <div class="container">
             <h1 class="title">Subir y Procesar Videos</h1>
             <!-- Formulario para subir videos -->
-            <form method="POST" enctype="multipart/form-data" action="/upload" class="mb-4">
+            <form id="uploadForm" enctype="multipart/form-data" class="mb-4">
                 <div class="field">
-                    <label class="label">Selecciona un video:</label>
+                    <label class="label">Selecciona uno o más videos:</label>
                     <div class="control">
-                        <input type="file" name="file" accept=".mp4,.avi,.mkv,.mov,.m4v,.mts,.wmv,.mpg,.flv" class="input" required>
+                        <input id="fileInput" type="file" name="file" accept=".mp4,.avi,.mkv,.mov,.m4v,.mts,.wmv,.mpg,.flv" class="input" multiple required>
                     </div>
                 </div>
-                <div class="control">
-                    <button type="submit" class="button is-primary">Subir Video</button>
+                <!-- Selección de idioma -->
+                <div class="field">
+                    <label class="label">Idioma principal del video:</label>
+                    <div class="control">
+                        <div class="select">
+                            <select id="languageSelect" name="language" required>
+                                <option value="" disabled selected>Selecciona un idioma</option>
+                                {% for language, codes in language_codes.items() %}
+                                    <option value="{{ codes[0] }}">{{ language }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
                 </div>
+                <div class="control is-flex">
+                    <!-- Botón para generar subtítulos -->
+                    <button id="submitButton" type="submit" class="button is-primary">Generar subtítulos</button>  
+                </div>
+                
             </form>
-            <!-- Aquí se mostrarán los subtítulos generados -->
-            <div class="subtitle">
-                <!-- Coloca aquí la sección para mostrar los subtítulos generados -->
-                <!-- Recuerda agregar un comentario que indique que aquí se mostrarán los subtítulos -->
+            <!-- Barra de progreso animada -->
+            <div class="progressbar-container">
+                <div class="counter">0</div>
+                <div class="progressbar">
+                    <span class="progress"></span>
+                </div>
             </div>
         </div>
     </section>
-
+    <section class="section">
+        <div class="container">
+            <h2 class="subtitle">Descargar subtítulos generados</h2>
+            <a id="downloadLink" href="#" class="button is-primary is-hidden" download>Descargar subtítulos ZIP</a>
+        </div>
+    </section>
     <!-- Footer -->
     <footer class="footer">
         <div class="content has-text-centered">
-            <p>Desarrollado con <strong>Bulma</strong>.</p>
-            <!-- Coloca aquí el enlace o botón para llamar a la función de procesamiento de videos -->
-            <!-- Añade un comentario que indique que aquí se llamará a la función -->
+            <p><strong>Desarrollado con Bulma (CSS Framework)</strong>.</p>
         </div>
     </footer>
+
+    <!-- Script de JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{{ url_for('static', filename='js/index.js') }}"></script>
 </body>
 </html>
-

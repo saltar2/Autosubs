@@ -2,14 +2,7 @@ import spacy,srt,configparser,json,numpy as np
 from tqdm import tqdm
 from spacy.matcher import Matcher,DependencyMatcher
 from spacy import displacy
-from backend.spacy_rules import puntuation_rules_left,puntuation_rules_right,grammatical_rules_v2
-#import concurrent.futures,queue, multiprocessing,logging
-#import openai
-
-# Configura tu clave de API de OpenAI
-
-config=configparser.ConfigParser()
-config.read('.env')
+from spacy_rules import puntuation_rules_left,puntuation_rules_right,grammatical_rules_v2
 
 nlp = spacy.load("es_dep_news_trf")
 

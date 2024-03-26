@@ -8,3 +8,4 @@ vad_chunks*
 *.json
 rnnoise*
 scripts_not_used*
+uploads*

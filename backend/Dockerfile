@@ -47,4 +47,4 @@ WORKDIR /app
 # Copia todo el contenido excepto lo especificado en .dockerignore
 COPY . .
 
-
+CMD ["python3", "app.py"]
