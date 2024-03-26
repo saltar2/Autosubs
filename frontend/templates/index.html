@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subir y Procesar Videos</title>
+    <!-- Enlace al archivo CSS de Bulma -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <!-- Estilos personalizados -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+</head>
+<body>
+    <section class="section">
+        <div class="container">
+            <h1 class="title">Subir y Procesar Videos</h1>
+            <!-- Formulario para subir videos -->
+            <form method="POST" enctype="multipart/form-data" action="/upload" class="mb-4">
+                <div class="field">
+                    <label class="label">Selecciona un video:</label>
+                    <div class="control">
+                        <input type="file" name="file" accept=".mp4,.avi,.mkv,.mov,.m4v,.mts,.wmv,.mpg,.flv" class="input" required>
+                    </div>
+                </div>
+                <div class="control">
+                    <button type="submit" class="button is-primary">Subir Video</button>
+                </div>
+            </form>
+            <!-- Aquí se mostrarán los subtítulos generados -->
+            <div class="subtitle">
+                <!-- Coloca aquí la sección para mostrar los subtítulos generados -->
+                <!-- Recuerda agregar un comentario que indique que aquí se mostrarán los subtítulos -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="content has-text-centered">
+            <p>Desarrollado con <strong>Bulma</strong>.</p>
+            <!-- Coloca aquí el enlace o botón para llamar a la función de procesamiento de videos -->
+            <!-- Añade un comentario que indique que aquí se llamará a la función -->
+        </div>
+    </footer>
+</body>
+</html>
+

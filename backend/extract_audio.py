@@ -1,4 +1,4 @@
-import os,json, subprocess,deepl_tr as dpl_tr
+import os,json, subprocess,backend.deepl_tr as dpl_tr
 
 def extract_audio_ffmpeg_v2(input_dir,language):
   # Supported video extensions

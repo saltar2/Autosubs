@@ -2,7 +2,7 @@ import spacy,srt,configparser,json,numpy as np
 from tqdm import tqdm
 from spacy.matcher import Matcher,DependencyMatcher
 from spacy import displacy
-from spacy_rules import puntuation_rules_left,puntuation_rules_right,grammatical_rules_v2
+from backend.spacy_rules import puntuation_rules_left,puntuation_rules_right,grammatical_rules_v2
 #import concurrent.futures,queue, multiprocessing,logging
 #import openai
 
@@ -157,16 +157,17 @@ def dividir_lineas_v2(input_file, output_file):#main function
     with open("info_spacy.json","w",encoding="utf-8") as info:
         info.write(json.dumps(info_file, indent=4))
 
+debug_spacy=False
+if debug_spacy==True:
+    def main():
+        import time
+        start_time=time.time()
+        dividir_lineas_v2("TFG_compartido/Avalanches_ Unpredictable, Inevitable, Fatal _ Deadly Disasters _ Free Documentary (192kbit_AAC).spa.deepgram_nova-2.srt",
+                    "TFG_compartido/Avalanches_ Unpredictable, Inevitable, Fatal _ Deadly Disasters _ Free Documentary (192kbit_AAC).spa.deepgram_nova-2_formated.srt")
+        end_time=time.time()
+        print("Tiempo total : "+str((end_time-start_time)/60)+" minutos") 
 
-def main():
-    import time
-    start_time=time.time()
-    dividir_lineas_v2("TFG_compartido/Avalanches_ Unpredictable, Inevitable, Fatal _ Deadly Disasters _ Free Documentary (192kbit_AAC).spa.deepgram_nova-2.srt",
-                   "TFG_compartido/Avalanches_ Unpredictable, Inevitable, Fatal _ Deadly Disasters _ Free Documentary (192kbit_AAC).spa.deepgram_nova-2_formated.srt")
-    end_time=time.time()
-    print("Tiempo total : "+str((end_time-start_time)/60)+" minutos") 
-
-main()
+    main()
 
 
 #funciones no utilizadas

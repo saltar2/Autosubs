@@ -1,5 +1,5 @@
 
-import transcription_translation as trtr,extract_audio,time,os
+import backend.transcription_translation as trtr,backend.extract_audio as extract_audio,time,os
 language_codes = {
     #"chinese": ["zh"],
     "czech" : ["cs"],

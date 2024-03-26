@@ -1,4 +1,4 @@
-import torch,os,deepl_tr,deepgram_tr,silero,spacy_nlp,srt,denoiser,concurrent.futures
+import torch,os,backend.deepl_tr as deepl_tr,backend.deepgram_tr as deepgram_tr,backend.silero as silero,backend.spacy_nlp as spacy_nlp,srt,backend.denoiser as denoiser,concurrent.futures
 from tqdm import tqdm
 
 def process_frag(i,aud_name):
@@ -81,7 +81,7 @@ def main(audio_path,language):
         except Exception as e:
             print(e)
 
-        '''finally:
+        finally:
             # Eliminar todos los archivos en la carpeta vad_chunks
             for filename in os.listdir("vad_chunks"):
                 file_path = os.path.join("vad_chunks", filename)
@@ -89,7 +89,7 @@ def main(audio_path,language):
                     if os.path.isfile(file_path):
                         os.unlink(file_path)
                 except Exception as e:
-                    print(f"No se pudo eliminar {file_path}: {e}")'''
+                    print(f"No se pudo eliminar {file_path}: {e}")
 
 if __name__ == '__main__':
     main()
