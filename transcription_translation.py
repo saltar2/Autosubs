@@ -12,8 +12,8 @@ def main(audio_path,language):
     transcription_mode=2 # mode 2 deepgram 
     translation=True
     denoise=True
-    denoise_ant=False
-    better_formating=False
+    denoise_ant=False# false indica que no se hace denoise antes de trocear el audio sino despues, true indica lo contrario
+    better_formating=True
     ####deepgram models
     # si usas otro modelo mira max workers en deepgram_tr.py
     model_size="nova-2"

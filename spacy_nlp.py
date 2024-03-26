@@ -76,7 +76,7 @@ def split_sentence_v3(sentence):
         for index in sorted_matches:
             tt=doc[aux:index].text
             long=len(tt)
-            if(long > min ):
+            if(long > min and len(doc[index:].text)>min ):#se añañde un indice siempre que sea de longitud minima y el texto restante sea mayor al minimo
                 match_index.append(index)
                 aux=index
 
