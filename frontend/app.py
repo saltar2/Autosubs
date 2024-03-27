@@ -13,7 +13,7 @@ ALLOWED_EXTENSIONS = {'mp4', 'avi', 'mkv', 'mov', 'm4v', 'mts', 'wmv', 'mpg', 'f
 #url_base='http://backend:5001'
 #local url
 url_base='http://localhost:5001'
-
+app.config['MAX_CONTENT_LENGTH'] = 2048 * 1024 * 1024#permitimos 2 GB
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['DOWNLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -41,23 +41,26 @@ def upload_files():
     for file in uploaded_files:
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
             uploaded_count += 1
 
             # Actualizar el progreso de la carga
-            progress = int((uploaded_count / total_files) * 100)
+            #progress = int((uploaded_count / total_files) * 100)
 
             # Enviar el archivo al backend
             backend_url = url_base+'/process_video'
-            files = {'file':  (filename,file.read())}  # Pasar el archivo directamente
+            #files = {'file':(filename,file)}
+            files = {'file': (filename,open(filepath, 'rb').read(),file.mimetype)}
             data = {'language': lan}
-            response = requests.post(backend_url, files=files, data=data)
+            response = requests.post(backend_url, data=data,files=files)
 
+            #files['file'][1].close()
             subtitle=response.json()
 
             subs.append(subtitle)
             
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            
             os.remove(filepath)
     # Generar archivo ZIP con los subtítulos
     zip_filename = 'subtitles.zip'
@@ -78,4 +81,4 @@ def download_zip(filename):
     return send_file(os.path.join(app.config['DOWNLOAD_FOLDER'], filename), as_attachment=True)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000,debug=True)
+    app.run(host='0.0.0.0', port=5000,debug=False)
