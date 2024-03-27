@@ -4,7 +4,11 @@ function downloadSubtitles() {
 }
 
 $(document).ready(function() {
+    // Define una variable global para almacenar el número total de archivos
+    var totalFiles = 0;
 
+    // Define una variable global para mantener el número de archivos cargados
+    var uploadedCount = 0;
     // Función para actualizar la barra de progreso y el número del porcentaje
     function updateProgressBar(percentComplete) {
         var progress = $('.progressbar .progress');
