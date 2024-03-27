@@ -34,7 +34,8 @@ def principal_v2(video_file,lan):#funcion para web
     
     sub=trtr.main(audio_path,lan)
 
-    os.remove(audio_path,video_file)
+    os.remove(audio_path)
+    os.remove(video_filename)
     return sub
 
 
