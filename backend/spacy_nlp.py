@@ -105,10 +105,10 @@ def split_sentence_v3(sentence):
         return [doc.text],info
 
 ###################################################################################
-def dividir_lineas_v2(input_file, output_file):#main function
+def dividir_lineas_v2(subtitles):#main function
     print("Formating subs for better reading ....")
-    with open(input_file, "r", encoding="utf-8") as file:
-        subtitles = list(srt.parse(file.read()))
+    '''with open(input_file, "r", encoding="utf-8") as file:
+        subtitles = list(srt.parse(file.read()))'''
     info_file=[]
     new_subtitles = []
     #params
@@ -145,10 +145,11 @@ def dividir_lineas_v2(input_file, output_file):#main function
 
     ajustar_duraciones(new_subtitles)
     #print("End formating subs")
-    with open(output_file, "w", encoding="utf-8") as out_file:
+    '''with open(output_file, "w", encoding="utf-8") as out_file:
         out_file.write(srt.compose(new_subtitles))
     with open("info_spacy.json","w",encoding="utf-8") as info:
-        info.write(json.dumps(info_file, indent=4))
+        info.write(json.dumps(info_file, indent=4))'''
+    return new_subtitles
 
 debug_spacy=False
 if debug_spacy==True:

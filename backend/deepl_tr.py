@@ -8,7 +8,7 @@ config.read('.env')
 deepl_authkey=config.get('API_KEYS','DEEPL_KEY')
 
 # DeepL translation
-def deepl_tr(subs,out_path,language,deepl_target_lang,model_size): 
+def deepl_tr(subs,language,deepl_target_lang): 
     print("Translating...")
     
     lines = []
@@ -129,14 +129,14 @@ def deepl_tr(subs,out_path,language,deepl_target_lang,model_size):
         print("DeepL translation error:", e)
 
     #----------------------------------------------------------------------------------
-    lan=translate_language_name(deepl_target_lang)
-    var=out_path.split(".srt")
+    #lan=translate_language_name(deepl_target_lang)
+    #var=out_path.split(".srt")
     #out_path=var[0]+"."+lan+".srt"
-    out_path=var[0]+"."+lan+model_size+".srt"
-    with open(out_path, "w", encoding="utf8") as f:
-        f.write(srt.compose(subs))
-    print("\nDone! Subs written to", out_path)
-    return out_path
+    #out_path=var[0]+"."+lan+model_size+".srt"
+    #with open(out_path, "w", encoding="utf8") as f:
+    #    f.write(srt.compose(subs))
+    #print("\nDone! Subs written to", out_path)
+    return subs
     
 
 def translate_language_name(language_name):

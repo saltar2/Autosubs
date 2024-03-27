@@ -1,6 +1,7 @@
 
-import transcription_translation as trtr,extract_audio as extract_audio,time,os
+import transcription_translation as trtr,extract_audio as extract_audio,time,os,srt
 from flask import Flask, request, jsonify
+from werkzeug.utils import secure_filename
 
 language_codes = {
     #"chinese": ["zh"],
@@ -26,70 +27,49 @@ language_codes = {
     "ukrainian": ["uk"]
 }
 
-def principal(current_directory,lan):#funcion para local sin web
-    extract_audio.extract_audio_ffmpeg(current_directory,lan)
-
-    audio_files = [f for f in os.listdir(current_directory) if f.lower().endswith(('.wav'))]#vamos a procesar una lista de audios si fuese necesario
-
-    for aud in audio_files:
-        trtr.main(os.path.join(current_directory,aud),lan)
-        os.remove(os.path.join(current_directory,aud))
-
 def principal_v2(video_file,lan):#funcion para web
-
-    audio=extract_audio.extract_audio_ffmpeg_v2(video_file,lan)
+    video_filename = os.path.join(backend_app.config['TEMP'], secure_filename(video_file.filename))
+    video_file.save(video_filename)
+    audio_path=extract_audio.extract_audio_ffmpeg(os.path.join(backend_app.config['TEMP']),lan)
     
-    sub=trtr.main_v2(audio,lan)
+    sub=trtr.main_v2(audio_path,lan)
 
-    os.remove(audio)
+    os.remove(audio_path,os.path.join(backend_app.config['TEMP'], video_file.filename))
     return sub
 
 
-web=True
-if web:
-    app = Flask(__name__)
 
-    @app.route('/language_codes', methods=['GET'])
-    def get_language_codes():
+backend_app = Flask(__name__)
+
+backend_app.config['TEMP']='temp'
+os.makedirs(backend_app.config['TEMP'], exist_ok=True)
+
+@backend_app.route('/language_codes', methods=['GET'])
+def get_language_codes():
         return jsonify(language_codes)
 
-    @app.route('/process_video', methods=['POST'])
-    def process_video():
+@backend_app.route('/process_video', methods=['POST'])
+def process_video():
         # Obtiene los datos del formulario enviado por el frontend
-        lan = request.form.get('language')
-        video_file = request.files['file']
+    lan = request.form.get('language')
+    video_file = request.files.get('file')
 
         # Llama a la función de procesamiento principal
-        #result = principal_v2(video_file, lan)
-
-        #subtitle example
-        import srt,datetime
-        subs=[]
-        sub=srt.Subtitle(
+    subs = principal_v2(video_file, lan)
+    
+    '''#subtitle example
+    import srt,datetime
+    
+    sub=srt.Subtitle(
                         index=1,
                         start=datetime.timedelta(seconds=2),
                         end=datetime.timedelta(seconds=5),
-                        content='Subtitulo de prueba',)
-        subs.append(sub)
-        result=srt.compose(subs)
+                        content='Subtitulo de prueba',)'''
+    
+    result=srt.compose(subs)
 
         # Devuelve el resultado al frontend
-        return jsonify(result)
+    return jsonify(result)
 
-    if __name__ == '__main__':
-        app.run(host='0.0.0.0', port=5001)  # Cambia el puerto según tus necesidades
-else:
-    #lan='japanese'
-    lan='english'
-    #current_directory="E:\Autosubs\TFG_compartido"#para escritorioy
-
-    current_directory=os.path.join(os.getcwd(), "TFG_compartido")
-    download_dir=""
-    upload_dir=""
-
-    start_time=time.time()
-
-    principal(current_directory,lan)
-
-    end_time=time.time()
-    print("Tiempo total : "+str((end_time-start_time)/60)+" minutos")
+if __name__ == '__main__':
+    backend_app.run(host='0.0.0.0', port=5001)  # Cambia el puerto según tus necesidades
