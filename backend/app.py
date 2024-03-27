@@ -53,6 +53,7 @@ def process_video():
         # Obtiene los datos del formulario enviado por el frontend
     lan = request.form.get('language')
     video_file = request.files.get('file')
+    filename, file_content = video_file
 
         # Llama a la función de procesamiento principal
     subs = principal_v2(video_file, lan)
