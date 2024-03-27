@@ -35,7 +35,7 @@ def main(audio_path,language):#version para no web
     assert language != ""
    
 
-    out_path = os.path.splitext(audio_path)[0] + ".srt"
+    #out_path = os.path.splitext(audio_path)[0] + ".srt"
     out_path_pre = os.path.splitext(audio_path)[0] #+ ".transcription.srt"
     audio_nombre=os.path.splitext(os.path.basename(audio_path))[0]
 
@@ -69,11 +69,11 @@ def main(audio_path,language):#version para no web
                 #print("(Untranslated subs saved to", out_path_pre, ")")
 
             if(translation):
-                out_path_deepl=deepl_tr.deepl_tr(subs,language,deepl_target_lang)
+                mid_subs=deepl_tr.deepl_tr(subs,language,deepl_target_lang)
                 if(better_formating):
                     #out_path_formated=out_path_deepl.split(".srt")[0]
                     #out_path_formated=out_path_formated+"_formated.srt"
-                    final_subs=spacy_nlp.dividir_lineas_v2(subs)
+                    final_subs=spacy_nlp.dividir_lineas_v2(mid_subs)
 
         except Exception as e:
             print(e)

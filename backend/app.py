@@ -32,15 +32,15 @@ def principal_v2(video_file,lan):#funcion para web
     video_file.save(video_filename)
     audio_path=extract_audio.extract_audio_ffmpeg(os.path.join(backend_app.config['TEMP']),lan)
     
-    sub=trtr.main_v2(audio_path,lan)
+    sub=trtr.main(audio_path,lan)
 
-    os.remove(audio_path,os.path.join(backend_app.config['TEMP'], video_file.filename))
+    os.remove(audio_path,video_file)
     return sub
 
 
 
 backend_app = Flask(__name__)
-
+backend_app.config['MAX_CONTENT_LENGTH'] = 2048 * 1024 * 1024#permitimos 2 GB
 backend_app.config['TEMP']='temp'
 os.makedirs(backend_app.config['TEMP'], exist_ok=True)
 
@@ -52,8 +52,8 @@ def get_language_codes():
 def process_video():
         # Obtiene los datos del formulario enviado por el frontend
     lan = request.form.get('language')
-    video_file = request.files.get('file')
-    filename, file_content = video_file
+    video_file= request.files['file']
+    
 
         # Llama a la función de procesamiento principal
     subs = principal_v2(video_file, lan)
