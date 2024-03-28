@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
     <!-- Estilos personalizados -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+    <link rel="icon" type="image/ico" href="/static/images/favicon.ico">
 </head>
 <body>
     <nav class="navbar is-primary" role="navigation" aria-label="main navigation">
@@ -50,17 +51,13 @@
                 
             </form>
             <!-- Barra de progreso animada -->
-            <div class="progressbar-container">
-                <div class="counter">0</div>
-                <div class="progressbar">
-                    <span class="progress"></span>
-                </div>
-            </div>
+            <progress id="progressBar" class="progress is-primary is-hidden" value="0" max="100"></progress>
+            <p id="progressText" class="is-hidden">0%</p>
         </div>
     </section>
     <section class="section">
         <div class="container">
-            <h2 class="subtitle">Descargar subtítulos generados</h2>
+            <h2 id="h2_name" class="subtitle is-hidden">Descargar subtítulos generados</h2>
             <a id="downloadLink" href="#" class="button is-primary is-hidden" download>Descargar subtítulos ZIP</a>
         </div>
     </section>
