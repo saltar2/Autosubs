@@ -57,20 +57,21 @@ def process_video():
     
 
         # Llama a la función de procesamiento principal
-    subs = principal_v2(video_file, lan)
-    
-    '''#subtitle example
+    #subs = principal_v2(video_file, lan)
+    subs=[]
+    #subtitle example
     import srt,datetime
     
     sub=srt.Subtitle(
                         index=1,
                         start=datetime.timedelta(seconds=2),
                         end=datetime.timedelta(seconds=5),
-                        content='Subtitulo de prueba',)'''
+                        content='Subtitulo de prueba',)
+    subs.append(sub)
     
     result=srt.compose(subs)
 
-        # Devuelve el resultado al frontend
+    # Devuelve el resultado al frontend
     return jsonify(result)
 
 if __name__ == '__main__':
