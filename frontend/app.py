@@ -2,14 +2,16 @@ from flask import Flask, render_template, request, redirect, url_for, send_file
 import os, requests
 from werkzeug.utils import secure_filename
 import zipfile
+# Ruta para la subida de archivos
+from flask import Response, stream_with_context
 
 # Configuración de la aplicación
 app = Flask(__name__)
 
 #docker url
-#url_base='http://backend:5001'
+url_base='http://backend:5001'
 #local url
-url_base='http://localhost:5001'
+#url_base='http://localhost:5001'
 # Configuración de la subida de archivos
 UPLOAD_FOLDER = 'uploads'
 DOWNLOAD_FOLDER = 'downloads'
@@ -36,7 +38,61 @@ def index():
     # Renderizar la página de inicio con los códigos de idioma
     return render_template('index.html', language_codes=language_codes)
 
-# Ruta para la subida de archivos
+
+'''@app.route('/upload', methods=['POST'])
+def upload_files():
+    try:
+        # Obtener los archivos y el idioma del formulario
+        uploaded_files = request.files.getlist('file')
+        lan = request.form.get('language')
+
+        # Variables para el progreso y la lista de subtítulos
+        total_files = len(uploaded_files)
+        uploaded_count = 0
+        subs = []
+
+        # Generar eventos SSE para informar sobre el progreso
+        def generate(file):
+            nonlocal uploaded_count
+            if file and allowed_file(file.filename):
+                # Guardar el archivo
+                filename = secure_filename(file.filename)
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(filepath)
+                uploaded_count += 1
+
+                # Actualizar el progreso de la carga
+                progress = int((uploaded_count / total_files) * 100)
+
+                # Enviar el progreso a través de SSE
+                yield f"""data: {{"fileName": "{filename}", "progress": {progress}}}"""
+
+
+                # Enviar el archivo al backend
+                backend_url = url_base + '/process_video'
+                files = {'file': (filename, open(filepath, 'rb').read(), file.mimetype)}
+                data = {'language': lan}
+                response = requests.post(backend_url, data=data, files=files)
+
+                # Obtener el subtítulo del backend
+                subtitle = response.json()
+
+                # Agregar el subtítulo a la lista
+                subs.append(subtitle)
+
+                # Eliminar el archivo temporal
+                os.remove(filepath)
+
+        # Retornar la respuesta con SSE
+        return Response(stream_with_context(generate(file) for file in uploaded_files), content_type='text/event-stream')
+
+    except requests.exceptions.RequestException as e:
+        # Manejar errores de comunicación con el backend
+        return render_template('error.html', error_message=f"Error procesando archivos: {str(e)}"), 500
+    except Exception as e:
+        # Manejar otros errores inesperados
+        return render_template('error.html', error_message=f"An unexpected error occurred: {str(e)}"), 500'''
+
 @app.route('/upload', methods=['POST'])
 def upload_files():
     try:

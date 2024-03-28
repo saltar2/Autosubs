@@ -1,67 +1,78 @@
 function downloadSubtitles() {
     var downloadUrl = $('#downloadLink').attr('href');
     window.location.href = downloadUrl;
-}
-
-$(document).ready(function() {
-    // Define una variable global para almacenar el número total de archivos
-    var totalFiles = 0;
-
-    // Define una variable global para mantener el número de archivos cargados
-    var uploadedCount = 0;
-    // Función para actualizar la barra de progreso y el número del porcentaje
-    function updateProgressBar(percentComplete) {
-        var progress = $('.progressbar .progress');
-        var counter = $('.counter');
-
-        // Actualiza el texto del contador y el ancho de la barra de progreso
-        counter.text(Math.round(percentComplete) + '%');
-        progress.css('width', percentComplete + '%');
+  }
+  
+  $(document).ready(function() {
+    // Objeto para almacenar el progreso de cada archivo
+    var fileUploadProgress = {};
+  
+    // Función para actualizar la barra de progreso de un archivo
+    function updateProgressBar(fileName, percentComplete) {
+      var progress = $(`.progress-bar[data-file-name="${fileName}"]`);
+      var counter = $(`.counter[data-file-name="${fileName}"]`);
+  
+      // Actualiza el texto del contador y el ancho de la barra de progreso
+      counter.text(Math.round(percentComplete) + '%');
+      progress.css('width', percentComplete + '%');
     }
-
-    // Ocultar la barra de progreso y el número del porcentaje al cargar la página
-    $('.progressbar-container').hide();
+  
+    // Ocultar la información de progreso al cargar la página
+    $('.progress-container').hide();
     $('.counter').hide();
-
+  
+    // Crear una nueva instancia de EventSource para escuchar eventos SSE
+    var eventSource = new EventSource('/upload');
+  
+    // Manejar eventos SSE recibidos del servidor
+    eventSource.onmessage = function(event) {
+      var data = JSON.parse(event.data);
+      var fileName = data.fileName;
+      var progress = parseInt(data.progress);
+  
+      // Actualizar la barra de progreso del archivo correspondiente
+      updateProgressBar(fileName, progress);
+  
+      // Ocultar la información de progreso si la carga ha finalizado
+      if (progress === 100) {
+        $(`.progress-container[data-file-name="${fileName}"]`).hide();
+      }
+    };
+  
+    // Cerrar la conexión SSE cuando la página se cierre o se recargue
+    $(window).on('beforeunload', function() {
+      eventSource.close();
+    });
+  
     // Cuando se envía el formulario
     $('#uploadForm').submit(function(event) {
-        event.preventDefault();
-        var formData = new FormData($(this)[0]);
-        var progressContainer = $('.progressbar-container'); // Seleccione el contenedor de la barra de progreso animada
-
-        // Muestra la barra de progreso y el número del porcentaje
-        progressContainer.show();
-        $('.counter').show();
-
-        $.ajax({
-            xhr: function() {
-                var xhr = new window.XMLHttpRequest();
-                // Configura la función de progreso
-                xhr.upload.addEventListener('progress', function(evt) {
-                    if (evt.lengthComputable) {
-                        var percentComplete = evt.loaded / evt.total * 100;
-                        updateProgressBar(percentComplete); // Llama a la función para actualizar la barra de progreso animada
-                    }
-                }, false);
-                return xhr;
-            },
-            type: 'POST',
-            url: '/upload',
-            data: formData,
-            cache: false,
-            contentType: false,
-            processData: false,
-            success: function(response) {
-                // Oculta la barra de progreso y el número del porcentaje cuando la carga está completa
-                progressContainer.hide();
-                $('.counter').hide();
-
-                // Muestra el botón de descarga del ZIP
-                $('#downloadLink').removeClass('is-hidden').attr('href', response);
-            },
-            error: function(xhr, status, error) {
-                // Maneja errores aquí
-            }
-        });
+      event.preventDefault();
+      var formData = new FormData($(this)[0]);
+      var progressContainers = $('.progress-container'); // Seleccionar todos los contenedores de progreso
+  
+      // Mostrar la información de progreso de todos los archivos
+      progressContainers.show();
+      $('.counter').show();
+  
+      $.ajax({
+        type: 'POST',
+        url: '/upload',
+        data: formData,
+        cache: false,
+        contentType: false,
+        processData: false,
+        success: function(response) {
+          // Ocultar la información de progreso de todos los archivos
+          progressContainers.hide();
+          $('.counter').hide();
+  
+          // Mostrar el botón de descarga del ZIP
+          $('#downloadLink').removeClass('is-hidden').attr('href', response);
+        },
+        error: function(xhr, status, error) {
+          // Mostrar un mensaje de error al usuario
+          alert('Ha ocurrido un error al subir los archivos. Inténtalo de nuevo más tarde.');
+        }
+      });
     });
-});
+  });
