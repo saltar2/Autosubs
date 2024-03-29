@@ -57,8 +57,8 @@ def process_video():
     
 
         # Llama a la función de procesamiento principal
-    #subs = principal_v2(video_file, lan)
-    subs=[]
+    subs = principal_v2(video_file, lan)
+    '''subs=[]
     #subtitle example
     import srt,datetime
     
@@ -67,7 +67,7 @@ def process_video():
                         start=datetime.timedelta(seconds=2),
                         end=datetime.timedelta(seconds=5),
                         content='Subtitulo de prueba',)
-    subs.append(sub)
+    subs.append(sub)'''
     
     result=srt.compose(subs)
 

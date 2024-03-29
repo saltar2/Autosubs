@@ -22,7 +22,7 @@ function updateProgress() {
                 updateProgressBar(response.progress);
                 if (response.progress < 100) {
                     // Si el progreso no ha alcanzado el 100%, sigue comprobando
-                    setTimeout(updateProgress, 2500);  // Revisa cada segundo
+                    setTimeout(updateProgress, 30500);  // Revisa cada 30,5 segundos
                 } else {
                     // Cuando el progreso alcanza el 100%, oculta la barra de progreso
                     $('#progressBar').addClass('is-hidden');

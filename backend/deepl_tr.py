@@ -1,5 +1,5 @@
 
-import srt,languagecodes,unicodedata,configparser,deepl,json
+import languagecodes,unicodedata,configparser,deepl
 from lingua import LanguageDetectorBuilder
 from tqdm import tqdm
 
