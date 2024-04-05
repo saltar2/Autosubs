@@ -1,6 +1,6 @@
 
-import transcription_translation as trtr,extract_audio as extract_audio,time,os,srt
-from flask import Flask, request, jsonify
+import transcription_translation as trtr,extract_audio as extract_audio,os,srt,time
+from flask import Flask, request, jsonify,Response
 from werkzeug.utils import secure_filename
 
 language_codes = {
@@ -28,11 +28,13 @@ language_codes = {
 }
 
 def principal_v2(video_file,lan):#funcion para web
+    yield from generate_event(f'Procesando video: {video_file.filename}')
     video_filename = os.path.join(backend_app.config['TEMP'], secure_filename(video_file.filename))
     video_file.save(video_filename)
+    yield from generate_event(f'Extrayendo audio')
     audio_path=extract_audio.extract_audio_ffmpeg(os.path.join(backend_app.config['TEMP']),lan)
     
-    sub=trtr.main(audio_path,lan)
+    sub=trtr.main(audio_path,lan,generate_event)
 
     os.remove(audio_path)
     os.remove(video_filename)
@@ -58,6 +60,8 @@ def process_video():
 
         # Llama a la función de procesamiento principal
     subs = principal_v2(video_file, lan)
+    
+    ###
     '''subs=[]
     #subtitle example
     import srt,datetime
@@ -67,12 +71,22 @@ def process_video():
                         start=datetime.timedelta(seconds=2),
                         end=datetime.timedelta(seconds=5),
                         content='Subtitulo de prueba',)
-    subs.append(sub)'''
-    
+    subs.append(sub)
+    time.sleep(5)'''
+    ###
     result=srt.compose(subs)
 
     # Devuelve el resultado al frontend
     return jsonify(result)
+
+def generate_event(text):
+        yield 'data: {}\n\n'.format(text)
+
+
+@backend_app.route('/event')
+def sse_endpoint():
+    
+    return Response(generate_event(), content_type='text/event-stream')
 
 if __name__ == '__main__':
     backend_app.run(host='0.0.0.0', port=5001)  # Cambia el puerto según tus necesidades

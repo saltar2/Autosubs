@@ -1,3 +1,21 @@
+var scrollTimeout;
+var autoScrollEnabled = true;
+
+
+function scrollToBottom() {
+    var messageBox = document.getElementById('messages');
+    messageBox.scrollTop = messageBox.scrollHeight;
+}
+
+function handleScroll() {
+    clearTimeout(scrollTimeout);
+    autoScrollEnabled = false;
+    // Después de 2 segundos de inactividad en el scroll, reactiva el desplazamiento automático
+    scrollTimeout = setTimeout(function() {
+        autoScrollEnabled = true;
+    }, 10000);
+}
+
 function downloadSubtitles() {
     var downloadUrl = $('#downloadLink').attr('href');
     window.location.href = downloadUrl;
@@ -22,11 +40,12 @@ function updateProgress() {
                 updateProgressBar(response.progress);
                 if (response.progress < 100) {
                     // Si el progreso no ha alcanzado el 100%, sigue comprobando
-                    setTimeout(updateProgress, 30500);  // Revisa cada 30,5 segundos
+                    setTimeout(updateProgress, 15500);  // Revisa cada 15,5 segundos
                 } else {
                     // Cuando el progreso alcanza el 100%, oculta la barra de progreso
                     $('#progressBar').addClass('is-hidden');
                     $('#progressText').addClass('is-hidden');
+                    updateProgressBar(0)
                 }
             }
         },
@@ -34,6 +53,38 @@ function updateProgress() {
             // Manejo de errores
         }
     });
+}
+function toggleMessageBox() {
+    var checkbox = $('#showMessagesCheckbox');
+    var messageBox = $('#messageBox');
+    if (checkbox.prop('checked')) {
+        messageBox.removeClass('is-hidden');
+    } else {
+        messageBox.addClass('is-hidden');
+    }
+}
+
+function receiveSSE() {
+    var eventSource = new EventSource('/event'); // Ruta del endpoint SSE en tu servidor Flask
+    eventSource.onopen = function() {
+        console.log('Conexión SSE establecida');
+        var messageBox = document.getElementById('messages');
+        messageBox.innerHTML = '';
+    };
+    eventSource.onerror = function(event) {
+        console.error('Error en la conexión SSE', event);
+        eventSource.close();
+    };
+    eventSource.addEventListener('message', function(event) {
+        console.log('Evento SSE recibido del servidor:', event.data);
+        // Actualiza el contenido del cuadro de mensajes en la interfaz web
+        var messageBox = document.getElementById('messages');
+        messageBox.innerHTML += event.data + '<br>';
+        if (autoScrollEnabled) {
+            scrollToBottom();
+        }
+    });
+    return eventSource;
 }
 // Cuando se envía el formulario
 $('#uploadForm').submit(function(event) {
@@ -46,6 +97,8 @@ $('#uploadForm').submit(function(event) {
     $('#progressBar').removeClass('is-hidden');
     $('#progressText').removeClass('is-hidden');
 
+    
+    
     $.ajax({
         type: 'POST',
         url: '/upload',
@@ -53,17 +106,6 @@ $('#uploadForm').submit(function(event) {
         cache: false,
         contentType: false,
         processData: false,
-        /*xhrFields: {
-            // Agregar esta opción para permitir eventos progresivos desde el servidor
-            onprogress: function(e) {
-                if (e.lengthComputable) {
-                    // Calcular el porcentaje completo
-                    var percentComplete = (e.loaded / e.total) * 100;
-                    // Actualizar la barra de progreso y el texto
-                    updateProgressBar(percentComplete);
-                }
-            }
-        },*/
         
         success: function(response) {
             // Ocultar la información de progreso de todos los archivos
@@ -80,7 +122,7 @@ $('#uploadForm').submit(function(event) {
             // Detener la llamada a la función updateProgress
             clearTimeout(updateProgressTimeout);
             
-            
+            eventSource.close()
         },
         error: function(xhr, status, error) {
             // Mostrar un mensaje de error al usuario
@@ -95,6 +137,50 @@ $('#uploadForm').submit(function(event) {
     }
     callUpdateProgress();*/
     var updateProgressTimeout = setTimeout(updateProgress, 2500);
+    var eventSource=receiveSSE();
+    document.getElementById('messages').addEventListener('scroll', handleScroll);
 });
 
+//cargar idiomas si no se han cargado con la pagina
+// Esperar a que el documento esté completamente cargado
+$(document).ready(function() {
+    // Variable para verificar si los idiomas ya se han cargado
+    var languagesLoaded = false;
+    $('#showMessagesCheckbox').on('click', function() {
+        // Llamar a la función para mostrar u ocultar el cuadro de mensajes
+        toggleMessageBox();
+    });
+    
+    // Evento para detectar cuando se selecciona un idioma por primera vez
+    $('#languageSelect').on('click', function() {
+        // Verificar si los idiomas ya se han cargado
+        if (!languagesLoaded) {
+            // Realizar la llamada a la API del backend para obtener los idiomas
+            $.ajax({
+                type: 'GET',
+                url: '/language_codes', // Ruta en el servidor para obtener los códigos de idioma
+                success: function(response) {
+                    // Agregar los códigos de idioma al selector
+                    for (var language in response) {
+                        $('#languageSelect').append($('<option>', {
+                            value: response[language][0],
+                            text: language
+                        }));
+                    }
+                    // Indicar que los idiomas se han cargado
+                    languagesLoaded = true;
+                },
+                error: function(xhr, status, error) {
+                    // Manejar errores si la solicitud falla
+                    console.error('Error al obtener los códigos de idioma:', error);
+                    // Mostrar un mensaje de error al usuario, por ejemplo:
+                    alert('Ocurrió un error al obtener los códigos de idioma del servidor.');
+                }
+            });
+        }
+    });
+
+    // Resto de tu código JavaScript
+    // ...
+});
 

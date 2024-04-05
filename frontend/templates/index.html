@@ -44,6 +44,12 @@
                         </div>
                     </div>
                 </div>
+                <div class="field">
+                    <label class="checkbox">
+                        <input type="checkbox" id="showMessagesCheckbox">
+                        Mostrar mensajes debug
+                    </label>
+                </div>
                 <div class="control is-flex">
                     <!-- Botón para generar subtítulos -->
                     <button id="submitButton" type="submit" class="button is-primary">Generar subtítulos</button>  
@@ -53,6 +59,10 @@
             <!-- Barra de progreso animada -->
             <progress id="progressBar" class="progress is-primary is-hidden" value="0" max="100"></progress>
             <p id="progressText" class="is-hidden">0%</p>
+            <div id="messageBox" class="box is-hidden">
+                <p class="subtitle">Informacion detallada:</p>
+                <div id="messages"></div>
+            </div>
         </div>
     </section>
     <section class="section">

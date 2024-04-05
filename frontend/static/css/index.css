@@ -105,6 +105,12 @@ span.progress {
     text-align: center;
 }
 
+#messages {
+    max-height: 250px; /* Tamaño máximo del contenedor de mensajes */
+    overflow-y: auto; /* Aparecerá una barra de desplazamiento vertical cuando sea necesario */
+}
+
+
 
 
 

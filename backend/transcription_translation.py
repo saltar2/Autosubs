@@ -6,7 +6,7 @@ def process_frag(i,aud_name):
         #"vad_chunks/{aud_name}_d.wav"
         denoiser.denoise(f,i,f)
 
-def main(audio_path,language):#version para no web
+def main(audio_path,language,event_generator):#version para no web
 
     transcription=True
     transcription_mode=2 # mode 2 deepgram 
@@ -40,6 +40,7 @@ def main(audio_path,language):#version para no web
     audio_nombre=os.path.splitext(os.path.basename(audio_path))[0]
 
     if(transcription):
+        yield from event_generator('Cortando audio')
         audio_path2=audio_path
         if(denoise and denoise_ant):
             audio_path2=out_path_pre+"_denoised.wav"
@@ -59,6 +60,7 @@ def main(audio_path,language):#version para no web
         
         try:
             if(transcription_mode==2):
+                yield from event_generator('Transcribiendo audio')
                 subs=deepgram_tr.deepgram_tr(u,model_size,audio_nombre,language)
                 #model_size=".deepgram_"+model_size
 
@@ -69,10 +71,12 @@ def main(audio_path,language):#version para no web
                 #print("(Untranslated subs saved to", out_path_pre, ")")
 
             if(translation):
+                yield from event_generator('Traduciendo subtitulos')
                 mid_subs=deepl_tr.deepl_tr(subs,language,deepl_target_lang)
                 if(better_formating):
                     #out_path_formated=out_path_deepl.split(".srt")[0]
                     #out_path_formated=out_path_formated+"_formated.srt"
+                    yield from event_generator('Formateando subtitulos')
                     final_subs=spacy_nlp.dividir_lineas_v2(mid_subs)
 
         except Exception as e:
