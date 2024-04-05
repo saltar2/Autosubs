@@ -1,7 +1,10 @@
 
-import transcription_translation as trtr,extract_audio as extract_audio,os,srt,time
+import transcription_translation as trtr,extract_audio as extract_audio,os,srt,time,threading
+from multiprocessing import Queue
 from flask import Flask, request, jsonify,Response
 from werkzeug.utils import secure_filename
+
+event_queue = Queue()
 
 language_codes = {
     #"chinese": ["zh"],
@@ -27,18 +30,18 @@ language_codes = {
     "ukrainian": ["uk"]
 }
 
-def principal_v2(video_file,lan):#funcion para web
-    yield from generate_event(f'Procesando video: {video_file.filename}')
+def principal_v2(video_file,lan,queue):#funcion para web
+    event_queue.put('Procesando video: {}'.format(video_file.filename))
     video_filename = os.path.join(backend_app.config['TEMP'], secure_filename(video_file.filename))
     video_file.save(video_filename)
-    yield from generate_event(f'Extrayendo audio')
+    event_queue.put('Extrayendo audio ...')
     audio_path=extract_audio.extract_audio_ffmpeg(os.path.join(backend_app.config['TEMP']),lan)
     
-    sub=trtr.main(audio_path,lan,generate_event)
+    sub=trtr.main(audio_path,lan,event_queue)
 
     os.remove(audio_path)
     os.remove(video_filename)
-    return sub
+    queue.put(sub)
 
 
 
@@ -57,10 +60,13 @@ def process_video():
     lan = request.form.get('language')
     video_file= request.files['file']
     
-
-        # Llama a la función de procesamiento principal
-    subs = principal_v2(video_file, lan)
+    # Llama a la función de procesamiento principal
+    result_queue = Queue()
+    processing_thread = threading.Thread(target=principal_v2, args=(video_file, lan,result_queue))
+    processing_thread.start()
     
+    processing_thread.join()#principal_v2(video_file, lan)
+    subs=result_queue.get()
     ###
     '''subs=[]
     #subtitle example
@@ -79,14 +85,18 @@ def process_video():
     # Devuelve el resultado al frontend
     return jsonify(result)
 
-def generate_event(text):
-        yield 'data: {}\n\n'.format(text)
-
 
 @backend_app.route('/event')
 def sse_endpoint():
-    
+    def generate_event():
+        while True:
+            event=event_queue.get()
+            yield "data: {}\n\n".format(event)
+            time.sleep(1.5)
+        
+    event_thread = threading.Thread(target=generate_event)
+    event_thread.start()        
     return Response(generate_event(), content_type='text/event-stream')
 
 if __name__ == '__main__':
-    backend_app.run(host='0.0.0.0', port=5001)  # Cambia el puerto según tus necesidades
+    backend_app.run(host='0.0.0.0', port=5001,threaded=True)  # Cambia el puerto según tus necesidades
