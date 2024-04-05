@@ -1,6 +1,6 @@
 var scrollTimeout;
 var autoScrollEnabled = true;
-
+var languagesLoaded = false;
 
 function scrollToBottom() {
     var messageBox = document.getElementById('messages');
@@ -36,11 +36,9 @@ function updateProgress() {
         success: function(response) {
             if (response && response.progress !== undefined) {
                 // Actualizar la barra de progreso en el frontend
-                //console.log('Progreso recibido:', response.progress);
                 updateProgressBar(response.progress);
                 if (response.progress < 100) {
-                    // Si el progreso no ha alcanzado el 100%, sigue comprobando
-                    setTimeout(updateProgress, 15500);  // Revisa cada 15,5 segundos
+
                 } else {
                     // Cuando el progreso alcanza el 100%, oculta la barra de progreso
                     $('#progressBar').addClass('is-hidden');
@@ -77,6 +75,7 @@ function receiveSSE() {
     };
     eventSource.addEventListener('message', function(event) {
         console.log('Evento SSE recibido del servidor:', event.data);
+        updateProgress();
         // Actualiza el contenido del cuadro de mensajes en la interfaz web
         var messageBox = document.getElementById('messages');
         messageBox.innerHTML += event.data + '<br>';
@@ -120,7 +119,6 @@ $('#uploadForm').submit(function(event) {
             // activar el botón de submit
             $('#submitButton').prop('disabled', false);
             // Detener la llamada a la función updateProgress
-            clearTimeout(updateProgressTimeout);
             
             eventSource.close()
         },
@@ -131,12 +129,6 @@ $('#uploadForm').submit(function(event) {
             $('#submitButton').prop('disabled', false);
         }
     });
-    /*function callUpdateProgress() {
-        updateProgress();
-        setTimeout(callUpdateProgress, 1000); // Llama a esta función cada 200 milisegundos
-    }
-    callUpdateProgress();*/
-    var updateProgressTimeout = setTimeout(updateProgress, 2500);
     var eventSource=receiveSSE();
     document.getElementById('messages').addEventListener('scroll', handleScroll);
 });
@@ -145,7 +137,7 @@ $('#uploadForm').submit(function(event) {
 // Esperar a que el documento esté completamente cargado
 $(document).ready(function() {
     // Variable para verificar si los idiomas ya se han cargado
-    var languagesLoaded = false;
+    
     $('#showMessagesCheckbox').on('click', function() {
         // Llamar a la función para mostrar u ocultar el cuadro de mensajes
         toggleMessageBox();
@@ -180,7 +172,5 @@ $(document).ready(function() {
         }
     });
 
-    // Resto de tu código JavaScript
-    // ...
 });
 
