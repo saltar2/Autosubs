@@ -8,9 +8,9 @@ import zipfile
 app = Flask(__name__)
 
 #docker url
-#url_base='http://backend:5001'
+url_base='http://backend:5001'
 #local url
-url_base='http://localhost:5001'
+#url_base='http://localhost:5001'
 # Configuración de la subida de archivos
 
 UPLOAD_FOLDER = 'uploads'
