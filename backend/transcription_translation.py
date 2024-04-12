@@ -24,7 +24,7 @@ def main(audio_path,language,queue_event):#version para no web
     #model_size="whisper-large"
 
     # @markdown Advanced settings:
-    vad_threshold = 0.6  # @param {type:"number"} umbral de decision si hay audio de 0 a 1
+    vad_threshold = 0.35  # @param {type:"number"} umbral de decision si hay audio de 0 a 1
     chunk_threshold = 0.1  # @param {type:"number"} maxima longitud de silencio entre fragmentos de audio
     deepl_target_lang = "ES"  
     max_attempts = 3  

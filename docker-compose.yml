@@ -1,6 +1,7 @@
 version: '3'
 
 services:
+
   backend:
     build: ./backend
     image: autosubs_backend
@@ -10,6 +11,8 @@ services:
   frontend:
     build: ./frontend
     image: autosubs_frontend
+    depends_on:
+      - backend  # Indica que el frontend depende del backend
     ports:
       - "5000:5000"  # Puertos para acceder al frontend
     networks:
