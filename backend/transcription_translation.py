@@ -1,4 +1,4 @@
-import torch,os,deepl_tr as deepl_tr,deepgram_tr as deepgram_tr,silero as silero,spacy_nlp as spacy_nlp,srt,denoiser as denoiser,concurrent.futures
+import os,deepl_tr as deepl_tr,deepgram_tr as deepgram_tr,silero as silero,formater as formater,srt,denoiser as denoiser,concurrent.futures
 from tqdm import tqdm
 
 def process_frag(i,aud_name):
@@ -77,7 +77,7 @@ def main(audio_path,language,queue_event):#version para no web
                     #out_path_formated=out_path_deepl.split(".srt")[0]
                     #out_path_formated=out_path_formated+"_formated.srt"
                     queue_event.put('Formateando subtitulos ...')
-                    final_subs=spacy_nlp.dividir_lineas_v2(mid_subs)
+                    final_subs=formater.dividir_lineas_v2(mid_subs)
 
         except Exception as e:
             print(e)

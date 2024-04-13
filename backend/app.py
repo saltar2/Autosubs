@@ -99,4 +99,16 @@ def sse_endpoint():
     return Response(generate_event(), content_type='text/event-stream')
 
 if __name__ == '__main__':
-    backend_app.run(host='0.0.0.0', port=5001,threaded=True)  # Cambia el puerto según tus necesidades
+    #backend_app.run(host='0.0.0.0', port=5001,threaded=True)  # Cambia el puerto según tus necesidades
+    print("")
+    
+lan="japanese"
+audio_path=extract_audio.extract_audio_ffmpeg("/home/salva/Autosubs/backend/temp",lan)
+    
+sub=trtr.main(audio_path,lan,event_queue)
+result=srt.compose(sub)
+name='temp/'+os.path.splitext(os.path.basename(audio_path))[0]+".srt"
+with open(name, "a", encoding='utf-8') as a:
+    a.write(result)
+
+os.remove(audio_path)

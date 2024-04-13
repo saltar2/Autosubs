@@ -1,12 +1,12 @@
-import spacy,srt,configparser,json,numpy as np
+import spacy,srt
 from tqdm import tqdm
-from spacy.matcher import Matcher,DependencyMatcher
-from spacy import displacy
-from spacy_rules import puntuation_rules_left,puntuation_rules_right,grammatical_rules_v2
-
+#from spacy.matcher import Matcher,DependencyMatcher
+#from spacy import displacy
+#from spacy_rules import puntuation_rules_left,puntuation_rules_right,grammatical_rules_v2
+import cervantes_parser as cervantes
 nlp = spacy.load("es_dep_news_trf")
 
-
+'''
 gram_matcher= Matcher(nlp.vocab)
 #gram_matcher_dependency= DependencyMatcher(nlp.vocab)
 punt_matcher_left=Matcher(nlp.vocab)
@@ -21,7 +21,7 @@ for rule in puntuation_rules_right:
     punt_matcher_right.add(rule["label"], [rule["pattern"]])
 
 for rule in grammatical_rules_v2:
-    gram_matcher.add(rule["label"], [rule["pattern"]])
+    gram_matcher.add(rule["label"], [rule["pattern"]])'''
 '''for rule in grammatical_patterns_v2:
     gram_matcher_dependency.add(rule["nombre"], [rule["patron"]])'''
 
@@ -38,18 +38,48 @@ def ajustar_duraciones(new_subtitles, margin=0.05):
                 current_subtitle.start -= srt.timedelta(seconds=0.2)#al principio
                 current_subtitle.end += srt.timedelta(seconds=0.3)#al final
 
+
+def ajustar_duraciones_v2(new_subtitles, margin=0.05):
+    for i in range(len(new_subtitles)):
+        subtitle = new_subtitles[i]
+        
+        # Ajusta el inicio del subtítulo
+        new_start = max(subtitle.start - srt.timedelta(seconds=0.2), srt.timedelta(seconds=0))
+        if i > 0:
+            previous_subtitle = new_subtitles[i - 1]
+            if new_start < previous_subtitle.end + srt.timedelta(seconds=margin):
+                # Si el solapamiento es menor a 0.2 segundos, ajusta al tiempo entre subtítulos
+                if new_start < previous_subtitle.end:
+                    new_start = previous_subtitle.end
+                else:
+                    new_start = previous_subtitle.end + srt.timedelta(seconds=margin)
+        
+        # Ajusta el final del subtítulo
+        new_end = subtitle.end + srt.timedelta(seconds=0.3)
+        if i < len(new_subtitles) - 1:
+            next_subtitle = new_subtitles[i + 1]
+            if new_end > next_subtitle.start - srt.timedelta(seconds=margin):
+                # Si el solapamiento es menor a 0.3 segundos, ajusta al tiempo entre subtítulos
+                if new_end > next_subtitle.start:
+                    new_end = next_subtitle.start
+                else:
+                    new_end = next_subtitle.start - srt.timedelta(seconds=margin)
+        
+        subtitle.start = new_start
+        subtitle.end = new_end
+
 def split_sentence_v3(sentence):
     doc = nlp(sentence)
 
-    pun_matches_left=  [start for _, start, _ in punt_matcher_left(doc)]#signos que se separan por el lado izquierdo
+    '''pun_matches_left=  [start for _, start, _ in punt_matcher_left(doc)]#signos que se separan por el lado izquierdo
     pun_matches_right=   [end for _, _, end in punt_matcher_right(doc)]#signos que  se separan por el lado derecho
     #los matches de signos tienen preferencia a la hora de separar oraciones
-    gram_matches =  [start for _, start,_ in gram_matcher(doc)]#lista de matchs gramaticales
-    #start_indices =  gram_matcher_dependency(doc)
-    #displacy.serve(doc, style="dep")
+    gram_matches =  [start for _, start,_ in gram_matcher(doc)]#lista de matchs gramaticales'''
 
+    mt=cervantes.process_text(doc.text)
     matches=[]
-    matches.extend(pun_matches_left+pun_matches_right+gram_matches)
+    matches.extend(mt)
+    #matches.extend(pun_matches_left+pun_matches_right+gram_matches)
     sorted_matches=sorted(list(set(matches)))
     info={"sentence":sentence,"matches":[]}
     '''
@@ -113,13 +143,15 @@ def dividir_lineas_v2(subtitles):#main function
     new_subtitles = []
     #params
     max_characters=40
-    min_duration=1
+    
     margin=8
     for subtitle in tqdm(subtitles):
         text = subtitle.content
         #print("Subtitle ----- >> "+str(subtitle.index))
         # Aplica el matcher solo si la longitud del subtítulo supera los max_characters
-        if len(text) > max_characters+margin:
+        #text_len=len(text)
+        text_len=sum(1 for char in text if ord(char) < 128)
+        if  text_len >= max_characters+margin:
             lines,info = split_sentence_v3(text)
             info_file.append(info)
             #lines=divide_oraciones_with_gpt(text, subtitle.end.total_seconds() - subtitle.start.total_seconds())
@@ -143,7 +175,7 @@ def dividir_lineas_v2(subtitles):#main function
 
             subtitle.start = new_subtitle.end
 
-    ajustar_duraciones(new_subtitles)
+    ajustar_duraciones_v2(new_subtitles)
     #print("End formating subs")
     '''with open(output_file, "w", encoding="utf-8") as out_file:
         out_file.write(srt.compose(new_subtitles))
@@ -164,103 +196,3 @@ if debug_spacy==True:
     main()
 
 
-#funciones no utilizadas
-#dentro de split_sentence_v3      
-''' suma_acumulativa = calcular_suma_acumulativa(doc.text, max_chars, margin)[:-1]  # Grupos pseudoideales
-        # se resta 1 porque el ultimo valor no tiene significado al ser la ultima palabra
-        if(len(suma_acumulativa)==0):#caso linea mayor a max_chars pero menor a max_char+margin
-            return [doc.text],info
-        
-        #creamos una matriz nº matches * nº cortes pseudoideales
-        all_distances=np.zeros(( len(suma_acumulativa),len(matches)))
-        for idx, l in enumerate(suma_acumulativa):
-            # Se resta 1 en suma porque devuelve la posición de 1 hasta n
-            # y en matches las posiciones del match están de 0 hasta n-1
-            distances = [abs((l - 1) - match) for match in matches]#lista de distancias de 1 matche a n cortes pseudoideal
-                
-            all_distances[idx] = distances
-
-        best_match_indices = []
-
-        # Obtener el índice del mejor match para cada columna de all_distances
-        #AQUI HAY QUE APLICAR REGLAS DE LONGITUD MINIMA DEL SEGMENTO Y MATCH_DIST < MAX_DIST_TO_PSEUDOCORTE
-        for idx, _ in enumerate(all_distances):
-            best_match_index = np.argmin(all_distances[idx])#argmin devuelve el indice del valor minimo
-
-            index_space_sentence = matches[best_match_index]
-
-            if index_space_sentence not in best_match_indices:#esta condicion es para asegurarnos de usar el match solo 1 vez
-                best_match_indices.append(index_space_sentence)
-
-        info["matches"]= best_match_indices
-        ################################
-        #intentaremos agrupar las lineas de 2 en 2 de ser posible
-        if len(best_match_indices)==1:
-            fragments.append(doc[0:best_match_indices[0]].text+"\n"+doc[best_match_indices[0]:].text)
-        else:
-            start_idx = 0
-            
-            while(start_idx+1<len(best_match_indices)):
-                if(0==start_idx):
-                    fragments.append(doc[start_idx:best_match_indices[start_idx]].text+"\n"
-                                     +doc[best_match_indices[start_idx]:best_match_indices[start_idx+1]].text)#
-                    start_idx = start_idx+1
-                elif(start_idx+2==len(best_match_indices)):
-                    fragments.append(doc[best_match_indices[start_idx]:best_match_indices[start_idx+1]].text+"\n"
-                                     +doc[best_match_indices[start_idx+1]:].text)
-                    start_idx = start_idx+2
-                else:    
-                    fragments.append(doc[best_match_indices[start_idx]:best_match_indices[start_idx+1]].text+"\n"
-                                     +doc[best_match_indices[start_idx+1]:best_match_indices[start_idx+2]].text)#se fragmenta el texto desde donde indica start hasta best_match, este no incluido
-                    start_idx = start_idx+2              
-
-            # Añadir el último fragmento
-            if(len(best_match_indices)%2==0):
-                fragments.append(doc[best_match_indices[start_idx]:].text)
-
-        return fragments,info'''
-#antes estas funciones servian
-'''def obtener_longitudes_palabras(texto):
-    palabras = texto.split()
-    len_palabras = [len(palabra) for palabra in palabras]
-    #return json.dumps(palabras_longitudes, ensure_ascii=False)
-    return palabras,len_palabras
-
-def agrupar_palabras_por_tamaño(palabras,len_palabras, max_chars, margin):
-    grupos = []
-    grupo_actual = []
-    longitud_actual = 0
-
-    for i,palabra in enumerate(palabras):
-        longitud = len_palabras[i]
-        if longitud_actual + longitud <= max_chars + margin:
-            grupo_actual.append(palabra)
-            longitud_actual += longitud
-        else:
-            grupos.append(grupo_actual)
-            grupo_actual = [palabra]
-            longitud_actual = longitud
-
-    if grupo_actual:
-        grupos.append(grupo_actual)
-
-    return grupos
-'''
-#primera linea: calcular la longitud de cada palabra en la linea de subtitulos. Esto devuelve una lista longitudes y otra lista con las palabras de forma individual
-#segunda linea: agrupa las palabras por grupos de tamaño maximo max_chars+margin. Esto devuelve una lista de listas donde cada lista tiene las palabras de forma individual
-#tercera linea: contamos la cantidad de palabras en cada lista
-#bucle: calcula la suma acumulativa de la cantidad de palabras y devuelve una lista. Ej [9,4] -> [9,13]
-'''
-def calcular_suma_acumulativa(texto, max_chars, margin):
-    palabras, len_palabras = obtener_longitudes_palabras(texto)
-    grupos = agrupar_palabras_por_tamaño(palabras, len_palabras, max_chars, margin)
-    suma_palabras_por_grupo = [len(grupo) for grupo in grupos]
-
-    suma_acumulativa = []
-    suma_temporal = 0
-
-    for num_palabras in suma_palabras_por_grupo:
-        suma_temporal += num_palabras
-        suma_acumulativa.append(suma_temporal)
-
-    return suma_acumulativa'''
