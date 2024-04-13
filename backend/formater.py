@@ -4,7 +4,8 @@ from tqdm import tqdm
 #from spacy import displacy
 #from spacy_rules import puntuation_rules_left,puntuation_rules_right,grammatical_rules_v2
 import cervantes_parser as cervantes
-nlp = spacy.load("es_dep_news_trf")
+#nlp = spacy.load("es_dep_news_trf")
+nlp = spacy.load("es_core_news_sm")
 
 '''
 gram_matcher= Matcher(nlp.vocab)

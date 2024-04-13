@@ -39,3 +39,4 @@ spacy-curated-transformers==0.2.2
 spacy-legacy==3.0.12
 spacy-loggers==1.0.5
 Flask==3.0.2
+beautifulsoup4==4.12.3

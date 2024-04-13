@@ -42,6 +42,7 @@ RUN pip3 install -r requirements.txt
 #RUN pip3 install spacy
 
 #RUN python3 -m spacy download es_dep_news_trf
+RUN python3 -m spacy download es_core_news_sm
 
 WORKDIR /app
 # Copia todo el contenido excepto lo especificado en .dockerignore

@@ -47,7 +47,7 @@ def deepgram_tr(u, model_size,audio_nombre,language):
         os.remove(output)
     if(os.path.exists(output2)):#borramos el archivo de la ejecucion anterior
         os.remove(output2)
-    all_results = {}#debug file
+    #all_results = {}#debug file
     all_results_completed={}
     with concurrent.futures.ThreadPoolExecutor(max_workers=14) as executor:#para cambiar numero de workers mira esto -> https://developers.deepgram.com/docs/getting-started-with-pre-recorded-audio#rate-limits
         futures = [executor.submit(process_chunk,i, f"{audio_nombre}_{i}", dg_client, model_size,language) for i in range(len(u))]

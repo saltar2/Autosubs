@@ -66,8 +66,8 @@ function receiveSSE() {
     var eventSource = new EventSource('/event'); // Ruta del endpoint SSE en tu servidor Flask
     eventSource.onopen = function() {
         console.log('Conexión SSE establecida');
-        var messageBox = document.getElementById('messages');
-        messageBox.innerHTML = '';
+        //var messageBox = document.getElementById('messages');
+        //messageBox.innerHTML = '';
     };
     eventSource.onerror = function(event) {
         console.error('Error en la conexión SSE', event);
@@ -96,6 +96,8 @@ $('#uploadForm').submit(function(event) {
     $('#progressBar').removeClass('is-hidden');
     $('#progressText').removeClass('is-hidden');
 
+    var messageBox = document.getElementById('messages');
+    messageBox.innerHTML = '';
     
     
     $.ajax({
@@ -121,6 +123,7 @@ $('#uploadForm').submit(function(event) {
             // Detener la llamada a la función updateProgress
             
             eventSource.close()
+            console.log('Conexión SSE cerrada');
         },
         error: function(xhr, status, error) {
             // Mostrar un mensaje de error al usuario
