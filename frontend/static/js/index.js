@@ -1,6 +1,8 @@
 var scrollTimeout;
 var autoScrollEnabled = true;
 var languagesLoaded = false;
+var eventSource;
+var eventCondition = false;
 
 function scrollToBottom() {
     var messageBox = document.getElementById('messages');
@@ -122,8 +124,11 @@ $('#uploadForm').submit(function(event) {
             $('#submitButton').prop('disabled', false);
             // Detener la llamada a la función updateProgress
             
-            eventSource.close()
-            console.log('Conexión SSE cerrada');
+            //eventSource.close()
+            //console.log('Conexión SSE cerrada');
+            if (autoScrollEnabled) {
+                scrollToBottom();
+            }
         },
         error: function(xhr, status, error) {
             // Mostrar un mensaje de error al usuario
@@ -132,7 +137,11 @@ $('#uploadForm').submit(function(event) {
             $('#submitButton').prop('disabled', false);
         }
     });
-    var eventSource=receiveSSE();
+    if (!eventCondition){
+        eventSource=receiveSSE();
+        eventCondition=true
+    }
+     
     document.getElementById('messages').addEventListener('scroll', handleScroll);
 });
 

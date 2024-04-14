@@ -8,9 +8,9 @@ import zipfile
 app = Flask(__name__)
 
 #docker url
-url_base='http://backend:5001'
+#url_base='http://backend:5001'
 #local url
-#url_base='http://localhost:5001'
+url_base='http://localhost:5001'
 # Configuración de la subida de archivos
 
 UPLOAD_FOLDER = 'uploads'
@@ -54,15 +54,10 @@ def codes():
 # Ruta para la página de inicio
 @app.route('/')
 def index():
-    try:
-        language_codes=codes()
-    except:
-        # Manejar la excepción en caso de que la solicitud falle
-        #print("Error al obtener los códigos de idioma")
-        language_codes = {}  # Asignar un diccionario vacío o cualquier valor predeterminado
-    finally:
-        # Renderizar la página de inicio con los códigos de idioma
-        return render_template('index.html', language_codes=language_codes)
+    
+    language_codes={}
+   
+    return render_template('index.html', language_codes=language_codes)
 
 @app.route('/upload', methods=['POST'])
 def upload_files():
@@ -137,7 +132,7 @@ def download_zip(filename):
 @app.route('/event')
 def sse_endpoint():
     backend_response = requests.get(url_base+'/event', stream=True)
-    return Response(backend_response.iter_content(chunk_size=1024), content_type='text/event-stream')
+    return Response(backend_response.iter_content(), content_type='text/event-stream')
 
 
 
