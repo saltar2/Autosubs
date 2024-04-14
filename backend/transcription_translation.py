@@ -1,4 +1,4 @@
-import os,deepl_tr as deepl_tr,deepgram_tr as deepgram_tr,silero as silero,formater as formater,srt,denoiser as denoiser,concurrent.futures
+import os,deepl_tr as deepl_tr,deepgram_tr as deepgram_tr,silero as silero,formater as formater,srt,denoiser as denoiser,concurrent.futures,time
 from tqdm import tqdm
 
 def process_frag(i,aud_name):
@@ -24,7 +24,7 @@ def main(audio_path,language,queue_event):#version para no web
     #model_size="whisper-large"
 
     # @markdown Advanced settings:
-    vad_threshold = 0.35  # @param {type:"number"} umbral de decision si hay audio de 0 a 1
+    vad_threshold = 0.3  # @param {type:"number"} umbral de decision si hay audio de 0 a 1
     chunk_threshold = 0.1  # @param {type:"number"} maxima longitud de silencio entre fragmentos de audio
     deepl_target_lang = "ES"  
     max_attempts = 3  
@@ -41,6 +41,7 @@ def main(audio_path,language,queue_event):#version para no web
 
     if(transcription):
         queue_event.put('Cortando audio ...')
+        
         audio_path2=audio_path
         if(denoise and denoise_ant):
             audio_path2=out_path_pre+"_denoised.wav"
@@ -61,6 +62,7 @@ def main(audio_path,language,queue_event):#version para no web
         try:
             if(transcription_mode==2):
                 queue_event.put('Transcribiendo audio ...')
+                time.sleep(1)
                 subs=deepgram_tr.deepgram_tr(u,model_size,audio_nombre,language)
                 #model_size=".deepgram_"+model_size
 
@@ -72,11 +74,14 @@ def main(audio_path,language,queue_event):#version para no web
 
             if(translation):
                 queue_event.put('Traduciendo subtitulos ...')
+                
                 mid_subs=deepl_tr.deepl_tr(subs,language,deepl_target_lang)
                 if(better_formating):
                     #out_path_formated=out_path_deepl.split(".srt")[0]
                     #out_path_formated=out_path_formated+"_formated.srt"
+                    
                     queue_event.put('Formateando subtitulos ...')
+                    
                     final_subs=formater.dividir_lineas_v2(mid_subs)
 
         except Exception as e:

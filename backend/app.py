@@ -30,21 +30,37 @@ language_codes = {
     "ukrainian": ["uk"]
 }
 
-def principal_v2(video_file,lan,queue):#funcion para web
+'''def principal_v2(video_file,lan,queue):#funcion para web
+    time.sleep(1)
     event_queue.put('Procesando video: {}'.format(video_file.filename))
-    time.sleep(0.6)
+    
     video_filename = os.path.join(backend_app.config['TEMP'], secure_filename(video_file.filename))
     video_file.save(video_filename)
     event_queue.put('Extrayendo audio ...')
+    time.sleep(1)
     audio_path=extract_audio.extract_audio_ffmpeg(os.path.join(backend_app.config['TEMP']),lan)
     
     sub=trtr.main(audio_path,lan,event_queue)
 
     os.remove(audio_path)
     os.remove(video_filename)
-    queue.put(sub)
+    queue.put(sub)'''
 
+def principal(video_file,lan):#funcion para web
+    time.sleep(1)
+   
+    
+    video_filename = os.path.join(backend_app.config['TEMP'], secure_filename(video_file.filename))
+    video_file.save(video_filename)
+    event_queue.put('Procesando video: {}'.format(video_file.filename))
+    
+    audio_path=extract_audio.extract_audio_ffmpeg(os.path.join(backend_app.config['TEMP']),lan)
+    
+    sub=trtr.main(audio_path,lan,event_queue)
 
+    os.remove(audio_path)
+    os.remove(video_filename)
+    return sub
 
 backend_app = Flask(__name__)
 backend_app.config['MAX_CONTENT_LENGTH'] = 2048 * 1024 * 1024#permitimos 2 GB
@@ -62,12 +78,13 @@ def process_video():
     video_file= request.files['file']
     
     # Llama a la función de procesamiento principal
-    result_queue = Queue()
-    processing_thread = threading.Thread(target=principal_v2, args=(video_file, lan,result_queue))
+    #result_queue = Queue()
+    '''processing_thread = threading.Thread(target=principal_v2, args=(video_file, lan,result_queue))
     processing_thread.start()
     
-    processing_thread.join()#principal_v2(video_file, lan)
-    subs=result_queue.get()
+    processing_thread.join()#principal_v2(video_file, lan)'''
+    
+    subs=principal(video_file, lan)
     ###
     '''subs=[]
     #subtitle example
@@ -93,11 +110,8 @@ def sse_endpoint():
         while True:
             event=event_queue.get()
             yield "data: {}\n\n".format(event)
-            time.sleep(0.6)
-        
-    '''event_thread = threading.Thread(target=generate_event)
-    event_thread.start()
-    event_thread.join() '''       
+            print(event)
+            #time.sleep(0.6)     
     return Response(generate_event(), content_type='text/event-stream')
 
 if __name__ == '__main__':

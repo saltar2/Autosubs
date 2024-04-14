@@ -1,4 +1,4 @@
-import spacy,srt
+import spacy,srt,time
 from tqdm import tqdm
 #from spacy.matcher import Matcher,DependencyMatcher
 #from spacy import displacy
@@ -69,7 +69,7 @@ def ajustar_duraciones_v2(new_subtitles, margin=0.05):
         subtitle.start = new_start
         subtitle.end = new_end
 
-def split_sentence_v3(sentence):
+def split_sentence_v3(sentence,matches):
     doc = nlp(sentence)
 
     '''pun_matches_left=  [start for _, start, _ in punt_matcher_left(doc)]#signos que se separan por el lado izquierdo
@@ -77,11 +77,11 @@ def split_sentence_v3(sentence):
     #los matches de signos tienen preferencia a la hora de separar oraciones
     gram_matches =  [start for _, start,_ in gram_matcher(doc)]#lista de matchs gramaticales'''
 
-    mt=cervantes.process_text(doc.text)
-    matches=[]
-    matches.extend(mt)
+    #mt=cervantes.process_text(doc.text)
+    #matches=[]
+    #matches.extend(mt)
     #matches.extend(pun_matches_left+pun_matches_right+gram_matches)
-    sorted_matches=sorted(list(set(matches)))
+    #sorted_matches=sorted(list(set(matches)))
     info={"sentence":sentence,"matches":[]}
     '''
     Ejemplo para entender matches:
@@ -97,7 +97,7 @@ def split_sentence_v3(sentence):
         match_index=[]
         min=22
         aux=0
-        for index in sorted_matches:
+        for index in matches:
             tt=doc[aux:index].text
             long=len(tt)
             if(long > min and len(doc[index:].text)>min ):#se añañde un indice siempre que sea de longitud minima y el texto restante sea mayor al minimo
@@ -144,18 +144,42 @@ def dividir_lineas_v2(subtitles):#main function
     new_subtitles = []
     #params
     max_characters=40
-    
     margin=8
-    for subtitle in tqdm(subtitles):
-        text = subtitle.content
-        #print("Subtitle ----- >> "+str(subtitle.index))
-        # Aplica el matcher solo si la longitud del subtítulo supera los max_characters
-        #text_len=len(text)
+    max_len=20
+    full_list=[]
+    sub_list=[]
+    list_positions=[]
+    for subtitle in subtitles:
+        text=subtitle.content
         text_len=sum(1 for char in text if ord(char) < 128)
         if  text_len >= max_characters+margin:
-            lines,info = split_sentence_v3(text)
-            info_file.append(info)
+            sub_list.append(subtitle.content)
+            full_list.append(subtitle.content)
+            if(len(sub_list)==max_len):
+                list_positions.extend([ t for t in cervantes.process_text_v2(sub_list)])
+                
+                sub_list=[]
+            else:    
+                sub_list[len(sub_list)-1]= sub_list[len(sub_list)-1]+ " @ "
+
+    if sub_list!=[]:
+        sub_list[-1]=sub_list[-1].split('@')[0]
+        list_positions.extend([ t for t in cervantes.process_text_v2(sub_list)])
+    
+    aux=0
+    for subtitle in tqdm(subtitles):
+        text = subtitle.content
+        if aux < len(full_list):
+            
+            init_line=full_list[aux]
+        
+            if  text==init_line:
+                lines,info = split_sentence_v3(text,list_positions[aux])
+                aux+=1
+                info_file.append(info)
             #lines=divide_oraciones_with_gpt(text, subtitle.end.total_seconds() - subtitle.start.total_seconds())
+            else:
+                lines = [text]
         else:
             lines = [text]
 
@@ -189,8 +213,12 @@ if debug_spacy==True:
     def main():
         import time
         start_time=time.time()
-        dividir_lineas_v2("TFG_compartido/Avalanches_ Unpredictable, Inevitable, Fatal _ Deadly Disasters _ Free Documentary (192kbit_AAC).spa.deepgram_nova-2.srt",
-                    "TFG_compartido/Avalanches_ Unpredictable, Inevitable, Fatal _ Deadly Disasters _ Free Documentary (192kbit_AAC).spa.deepgram_nova-2_formated.srt")
+        srt_file="TFG_compartido/[DKB] Yoru no Kurage wa Oyogenai  - S01E01 [1080p][HEVC x265 10bit].es.srt"
+        with open(srt_file, 'r', encoding='utf-8') as archivo:
+            contenido = archivo.read()
+        subtitulos = list(srt.parse(contenido))
+        
+        dividir_lineas_v2(subtitulos)
         end_time=time.time()
         print("Tiempo total : "+str((end_time-start_time)/60)+" minutos") 
 

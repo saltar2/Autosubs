@@ -4,7 +4,7 @@ import json
 import re
 
 backend_url_cervantes = "https://data.cervantesvirtual.com/analizador"
-
+'''
 def parse_html(text):
     result = {'words': []}  # Diccionario para almacenar la información de las palabras
     
@@ -32,18 +32,14 @@ def parse_html(text):
                         palabra = cells[0].strong.get_text(strip=True)
                         categoria = cells[1].span.span.get_text(strip=True)
                         descripcion = cells[2].span.get_text(strip=True).split('Ejemplo')[0]
-                        #ejemplo=descripcion.split('Ejemplo')
-                        # Obtener el ejemplo si existe
-                        ejemplo_tag = cells[2].find('span', class_='nlp-ejemplo')
-                        ejemplo = ejemplo_tag.get_text(strip=True) if ejemplo_tag else None
+                        
                         
                         word_info = {
                             'palabra': palabra,
                             'categoria_gramatical': categoria,
                             'descripcion': descripcion
                         }
-                        if ejemplo:
-                            word_info['ejemplo'] = ejemplo
+                        
                         
                         result['words'].append(word_info)
         else:
@@ -53,12 +49,12 @@ def parse_html(text):
         result['status'] = 'error'
         result['message'] = 'Error al realizar la solicitud al backend de Cervantes'
     
-    return json.dumps(result, ensure_ascii=False,indent=4)
+    return json.dumps(result, ensure_ascii=False,indent=4)'''
 
 def find_positions(json_data):
     positions = []
     # Cargar el JSON
-    data = json.loads(json_data)
+    data = json_data
     # Verificar si el JSON contiene la clave 'words'
     if 'words' in data:
         aux = 0
@@ -95,9 +91,83 @@ def debug_print(text):
     return text_with_numbers
 
 
-def process_text(text):
-    return find_positions(parse_html(text))
+'''def process_text(text):
+    return find_positions(parse_html(text))'''
+
+def process_text_v2(text_list):
+    string_text=''.join(text_list)
+        #string_text+= [t for t in text_list]
+    result=parse_html_v2(string_text)
+    list_positions=[]
+    for res in result:
+        list_positions.append(find_positions(res))
+    return list_positions
+
+def parse_html_v2(text):
+    result = []  # Lista para almacenar la información de los subtítulos
     
+    # Realizar la solicitud al backend de Cervantes con el texto proporcionado
+    response = requests.post(backend_url_cervantes, data={'texto': text})
+    
+    # Comprobar si la solicitud fue exitosa
+    if response.status_code == 200:
+        # Analizar el HTML de la respuesta
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        # Buscar la estructura <h2>Resultado análisis morfológico</h2>
+        h2_tag = soup.find('h2', text='Resultado análisis morfológico')
+        if h2_tag:
+            # Buscar el siguiente elemento <table> después del h2_tag
+            table_tag = h2_tag.find_next_sibling('table', class_='analisis')
+            if table_tag:
+                # Procesar las filas de la tabla
+                rows = table_tag.find_all('tr')
+                subtitle_info = None
+                for row in rows[1:]:  # Saltar la primera fila (encabezados de columna)
+                    cells = row.find_all('td')
+                    if cells:
+                        # Obtener el texto dentro de las celdas
+                        palabra = cells[0].strong.get_text(strip=True)
+                        categoria = cells[1].span.span.get_text(strip=True)
+                        descripcion = cells[2].span.get_text(strip=True).split('Ejemplo')[0]
+                        
+                        
+                        word_info = {
+                            'palabra': palabra,
+                            'categoria_gramatical': categoria,
+                            'descripcion': descripcion
+                        }
+                        
+                        
+                        if palabra == '@':
+                            # Si se encuentra el carácter "@" indica el final de un subtítulo
+                            if subtitle_info:
+                                result.append(subtitle_info)
+                            subtitle_info = None
+                        else:
+                            # Si no es el carácter "@" se trata de información de palabra
+                            if not subtitle_info:
+                                subtitle_info = {'words': []}
+                            subtitle_info['words'].append(word_info)
+                
+                # Añadir el último subtítulo a la lista
+                if subtitle_info:
+                    result.append(subtitle_info)
+        else:
+            # Si no se encuentra la estructura <h2>Resultado análisis morfológico</h2>
+            result.append({
+                'status': 'error',
+                'message': 'No se encontró la estructura <h2>Resultado análisis morfológico</h2>'
+            })
+    else:
+        # Si hay un error al realizar la solicitud al backend de Cervantes
+        result.append({
+            'status': 'error',
+            'message': 'Error al realizar la solicitud al backend de Cervantes'
+        })
+    
+    return result 
+
 # Llamar a la función con el texto proporcionado
 '''text="Cuando estoy flotando como una medusa en una ciudad vacía, no me importa quién me vea."
 json_result = parse_html(text)
@@ -105,3 +175,6 @@ json_result = parse_html(text)
 list_positions=find_positions(json_result)
 print(list_positions)
 print(debug_print(text))'''
+
+'''string_aux="Me gusta pasear por Shibuya de noche. @ Las medusas son criaturas que no saben nadar solas. @ Me gusta flotar como una medusa en la ciudad, donde nadie me conoce, @ porque puedo ser yo mismo sin preocuparme de lo que piensen los demás."
+process_text_v2(string_aux)'''

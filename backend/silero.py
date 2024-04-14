@@ -26,7 +26,7 @@ def silero_vad(audio_path,vad_threshold,chunk_threshold):
     # Generate VAD timestamps
     VAD_SR = 16000
     wav = read_audio("vad_chunks/silero_temp.wav", sampling_rate=VAD_SR)
-    t = get_speech_timestamps(wav, model, sampling_rate=VAD_SR, threshold=vad_threshold,min_speech_duration_ms=500)
+    t = get_speech_timestamps(wav, model, sampling_rate=VAD_SR, threshold=vad_threshold,min_speech_duration_ms=400)
 
     # Add a bit of padding, and remove small gaps
     for i in range(len(t)):
