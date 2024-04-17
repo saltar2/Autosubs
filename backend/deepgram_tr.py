@@ -41,10 +41,10 @@ def deepgram_tr(u, model_size,audio_nombre,language):
     
 
     print("Running Deepgram")
-    output = "deepgram_transcription_"+model_size+".json" #json donde se puede ver las transcripciones
+    #output = "deepgram_transcription_"+model_size+".json" #json donde se puede ver las transcripciones
     output2= "deepgram_transcription_"+model_size+"_complete.json" 
-    if(os.path.exists(output)):#borramos el archivo de la ejecucion anterior
-        os.remove(output)
+    #if(os.path.exists(output)):#borramos el archivo de la ejecucion anterior
+    #    os.remove(output)
     if(os.path.exists(output2)):#borramos el archivo de la ejecucion anterior
         os.remove(output2)
     #all_results = {}#debug file
@@ -59,21 +59,83 @@ def deepgram_tr(u, model_size,audio_nombre,language):
 
             chunk_results=response["results"]["channels"][0]["alternatives"][0]
             all_results_completed[chunk_index]=response
+
             if chunk_results['transcript']!='':
                 chunk_results=chunk_results["paragraphs"]["paragraphs"]
-                for r in chunk_results:
+                for r in chunk_results["paragraphs"]:
                     for sen in r["sentences"]:
-                        start = sen["start"]+ u[chunk_index][0]["offset"]
-                        end= sen["end"]+ u[chunk_index][0]["offset"]
-                        trans=sen["text"]
+                        start = sen["start"]
+                        end = sen["end"]
+                        text = sen["text"]
 
-                        subs.append(srt.Subtitle(
-                            index=sub_index,
-                            start=datetime.timedelta(seconds=start),
-                            end=datetime.timedelta(seconds=end),
-                            content=trans.strip(),))
-                    
-                        sub_index += 1
+                        # Si la duración del subtítulo es menor a 1 segundo
+                        if end - start < 1:
+                            # Si hay subtítulos previos, intenta combinarlo con el último
+                            if subs:
+                                prev_end = subs[-1].end.total_seconds()
+                                # Si el margen de tiempo entre el final del subtítulo previo y el inicio del actual es menor a 0.09 segundos
+                                if start - prev_end < 0.09:
+                                    # Combina el texto con el subtítulo previo
+                                    subs[-1].content += ' ' + text.strip()
+                                    subs[-1].end = datetime.timedelta(seconds=end)
+                                    continue
+
+                            # Si no se puede combinar con el subtítulo previo, intenta con el siguiente si existe
+                            if len(chunk_results["paragraphs"]) > 1:
+                                next_start = chunk_results["paragraphs"][chunk_results["paragraphs"].index(r) + 1]["sentences"][0]["start"]
+                                # Si el margen de tiempo entre el final del subtítulo actual y el inicio del siguiente es menor a 0.09 segundos
+                                if next_start - end < 0.09:
+                                    # Combina el texto con el subtítulo siguiente
+                                    subs.append(srt.Subtitle(
+                                        index=sub_index,
+                                        start=datetime.timedelta(seconds=start),
+                                        end=datetime.timedelta(seconds=end),
+                                        content=text.strip()))
+                                    sub_index += 1
+                                    continue
+
+                            ant_end=subs[-1].end
+                            next=next_start
+
+                            if next-ant_end <1:
+                                start=ant_end
+                                end=next
+                            else:
+                                diff_with_ant=start-ant_end
+                                diff_with_next=end-next
+                                total=end-start
+                                fin=True
+                                margin=0.05
+
+                                while fin:
+                                    if diff_with_ant > margin:
+                                        start-=margin
+                                        diff_with_ant=start-ant_end
+                                        total=end-start
+                                        if total>1:
+                                            fin=False
+                                    if diff_with_next > margin:
+                                        end+=margin
+                                        diff_with_next=end-next
+                                        total=end-start
+                                        if total>1:
+                                            fin=False
+                                    
+                            # Si no se puede combinar con el subtítulo anterior ni con el siguiente, agrega el subtítulo actual como uno nuevo
+                            subs.append(srt.Subtitle(
+                                index=sub_index,
+                                start=datetime.timedelta(seconds=start),
+                                end=datetime.timedelta(seconds=end),
+                                content=text.strip()))
+                            sub_index += 1
+                        else:
+                            # Si la duración del subtítulo es mayor o igual a 1 segundo, agrégalo como un nuevo subtítulo
+                            subs.append(srt.Subtitle(
+                                index=sub_index,
+                                start=datetime.timedelta(seconds=start),
+                                end=datetime.timedelta(seconds=end),
+                                content=text.strip()))
+                            sub_index += 1
             
         # Ordenar all_results por las claves (chunk_index)
         
