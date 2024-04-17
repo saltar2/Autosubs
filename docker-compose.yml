@@ -13,22 +13,18 @@ services:
     image: autosubs_frontend
     depends_on:
       - backend  # Indica que el frontend depende del backend
-    #ports:
-    #  - "5000:5000"  # Puertos para acceder al frontend
-    networks:
-      - my-network
-    
-  nginx:
-    image: nginx
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
     ports:
-      - "80:80"
-    depends_on:
-      - frontend
+      - "80:5000"  # Puertos para acceder al frontend
+      #host:container
+    #extra_hosts:
+    #  - "autosubs.es:172.19.0.3"
     networks:
       - my-network
+  
 
+
+    
 networks:
   my-network:
     driver: bridge
+

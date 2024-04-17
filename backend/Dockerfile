@@ -8,7 +8,8 @@ RUN apt-get update && apt-get install -y \
     git\
     automake\
     autoconf\
-    libtool && apt autoclean
+    libtool\
+    wget && apt autoclean
 
 # Define el directorio de trabajo predeterminado
 WORKDIR /app
@@ -28,7 +29,7 @@ RUN python3 -c "import torch; torch.hub.load(repo_or_dir='snakers4/silero-vad', 
 
 #denoiser
 # Clona el repositorio rnnoise, configura y compila
-RUN git clone https://github.com/xiph/rnnoise.git \
+RUN git clone --branch v0.2 https://github.com/xiph/rnnoise.git \
     && cd rnnoise \
     && ./autogen.sh \
     && ./configure \
