@@ -14,7 +14,7 @@ services:
     depends_on:
       - backend  # Indica que el frontend depende del backend
     ports:
-      - "80:5000"  # Puertos para acceder al frontend
+      - "5000:5000"  # Puertos para acceder al frontend
       #host:container
     #extra_hosts:
     #  - "autosubs.es:172.19.0.3"

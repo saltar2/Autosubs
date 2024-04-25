@@ -8,9 +8,9 @@ import zipfile
 app = Flask(__name__)
 
 #docker url
-url_base='http://backend:5001'
+#url_base='http://backend:5001'
 #local url
-#url_base='http://localhost:5001'
+url_base='http://localhost:5001'
 # Configuración de la subida de archivos
 
 UPLOAD_FOLDER = 'uploads'
@@ -27,7 +27,7 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['DOWNLOAD_FOLDER'], exist_ok=True)
 
 processing_progress=0
-
+language_codes={}
 # Función para verificar la extensión del archivo
 def allowed_file(filename):
     return '.' in filename and \
@@ -41,6 +41,7 @@ def prog_var():
 @app.route('/language_codes',methods=['GET'])
 def codes():
     try:
+        global language_codes
         backend_url = url_base + '/language_codes'
         response = requests.get(backend_url)
         response.raise_for_status()  # Lanzar una excepción si la solicitud falla
@@ -54,9 +55,7 @@ def codes():
 # Ruta para la página de inicio
 @app.route('/')
 def index():
-    
-    language_codes={}
-   
+    global language_codes
     return render_template('index.html', language_codes=language_codes)
 
 @app.route('/upload', methods=['POST'])
@@ -105,13 +104,29 @@ def process_files(uploaded_files, lan):
             processing_progress=round((cont/long)*100,1)
     return subs
 
-def send_to_backend(filepath, filename, lan,mimetype):
+def send_to_backend(filepath, filename, lan, mimetype):
     backend_url = url_base + '/process_video'
     files = {'file': (filename, open(filepath, 'rb').read(), mimetype)}
     data = {'language': lan}
-    response = requests.post(backend_url, data=data, files=files)
-   
-    return response.json()
+    
+    try:
+        response = requests.post(backend_url, data=data, files=files)
+        response.raise_for_status()  # Lanza una excepción si el código de estado de la respuesta no es 2xx
+        
+        return response.json()
+    
+    except requests.exceptions.RequestException as e:
+        # Error de conexión o tiempo de espera
+        return {'error': f'Error de conexión: {str(e)}'}
+    
+    except requests.exceptions.HTTPError as e:
+        # Error HTTP (código de estado no 2xx)
+        return {str(e)}
+    
+    except Exception as e:
+        # Otros errores inesperados
+        return {'error': f'Error inesperado: {str(e)}'}
+
 
 
 def generate_zip(uploaded_files, subs):

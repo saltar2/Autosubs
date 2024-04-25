@@ -87,6 +87,29 @@ function receiveSSE() {
     });
     return eventSource;
 }
+function load_languages(){
+    $.ajax({
+        type: 'GET',
+        url: '/language_codes', // Ruta en el servidor para obtener los códigos de idioma
+        success: function(response) {
+            // Agregar los códigos de idioma al selector
+            for (var language in response) {
+                $('#languageSelect').append($('<option>', {
+                    value: response[language][0],
+                    text: language
+                }));
+            }
+            // Indicar que los idiomas se han cargado
+            languagesLoaded = true;
+        },
+        error: function(xhr, status, error) {
+            // Manejar errores si la solicitud falla
+            console.error('Error al obtener los códigos de idioma:', error);
+            // Mostrar un mensaje de error al usuario, por ejemplo:
+            alert('Ocurrió un error al obtener los códigos de idioma del servidor.');
+        }
+    });
+}
 // Cuando se envía el formulario
 $('#uploadForm').submit(function(event) {
     event.preventDefault();
@@ -154,33 +177,27 @@ $(document).ready(function() {
         // Llamar a la función para mostrar u ocultar el cuadro de mensajes
         toggleMessageBox();
     });
+    if ($('#languageSelect option').length > 1) {// si recargas la pagina las variables se restablecen
+        // Si ya están cargados, no se hace nada
+        languagesLoaded = true;
+        return;
+    }else{
+        load_languages();
+    }
+    
     
     // Evento para detectar cuando se selecciona un idioma por primera vez
     $('#languageSelect').on('click', function() {
         // Verificar si los idiomas ya se han cargado
-        if (!languagesLoaded) {
+        // Comprobar si los idiomas ya están cargados
+        if ($('#languageSelect option').length > 1) {// si recargas la pagina las variables se restablecen
+            // Si ya están cargados, no se hace nada
+            languagesLoaded = true;
+            return;
+        }
+        if (!languagesLoaded && $('#languageSelect option').length ==0) {
             // Realizar la llamada a la API del backend para obtener los idiomas
-            $.ajax({
-                type: 'GET',
-                url: '/language_codes', // Ruta en el servidor para obtener los códigos de idioma
-                success: function(response) {
-                    // Agregar los códigos de idioma al selector
-                    for (var language in response) {
-                        $('#languageSelect').append($('<option>', {
-                            value: response[language][0],
-                            text: language
-                        }));
-                    }
-                    // Indicar que los idiomas se han cargado
-                    languagesLoaded = true;
-                },
-                error: function(xhr, status, error) {
-                    // Manejar errores si la solicitud falla
-                    console.error('Error al obtener los códigos de idioma:', error);
-                    // Mostrar un mensaje de error al usuario, por ejemplo:
-                    alert('Ocurrió un error al obtener los códigos de idioma del servidor.');
-                }
-            });
+            load_languages();
         }
     });
 
