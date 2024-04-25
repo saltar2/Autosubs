@@ -53,10 +53,12 @@ def principal(video_file,lan):#funcion para web
     video_filename = os.path.join(backend_app.config['TEMP'], secure_filename(video_file.filename))
     video_file.save(video_filename)
     event_queue.put('Procesando video: {}'.format(video_file.filename))
-    
-    audio_path=extract_audio.extract_audio_ffmpeg(os.path.join(backend_app.config['TEMP']),lan)
-    
-    sub=trtr.main(audio_path,lan,event_queue)
+    try:
+        audio_path=extract_audio.extract_audio_ffmpeg(os.path.join(backend_app.config['TEMP']),lan)
+        
+        sub=trtr.main(audio_path,lan,event_queue)
+    except Exception as e:
+         return e
 
     os.remove(audio_path)
     os.remove(video_filename)
@@ -83,8 +85,10 @@ def process_video():
     processing_thread.start()
     
     processing_thread.join()#principal_v2(video_file, lan)'''
-    
-    subs=principal(video_file, lan)
+    try :
+        subs=principal(video_file, lan)
+    except Exception as e:
+         return e,500
     ###
     '''subs=[]
     #subtitle example
@@ -115,7 +119,7 @@ def sse_endpoint():
     return Response(generate_event(), content_type='text/event-stream')
 
 if __name__ == '__main__':
-    backend_app.run(host='0.0.0.0', port=5001,threaded=True)  # Cambia el puerto según tus necesidades
+    backend_app.run(host='0.0.0.0', port=5001,threaded=True,debug =False)  # Cambia el puerto según tus necesidades
     print("")
     
 '''lan="japanese"
