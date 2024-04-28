@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, send_file,jsonify,abort,Response
 import os, requests,time
 from werkzeug.utils import secure_filename
+from werkzeug.exceptions import HTTPException
 import zipfile
 
 
@@ -28,6 +29,7 @@ os.makedirs(app.config['DOWNLOAD_FOLDER'], exist_ok=True)
 
 processing_progress=0
 language_codes={}
+
 # Función para verificar la extensión del archivo
 def allowed_file(filename):
     return '.' in filename and \
@@ -46,12 +48,11 @@ def codes():
         response = requests.get(backend_url)
         response.raise_for_status()  # Lanzar una excepción si la solicitud falla
         language_codes = response.json()
-        return language_codes
-    except requests.exceptions.RequestException as e:
+        return language_codes,200
+    except requests.exceptions.RequestException:
         # Manejar la excepción en caso de que la solicitud falle
-        print(f"Error al obtener los códigos de idioma: {e}")
-        abort(500,description="La aplicacion de backend no esta disponible") 
-
+        #print(f"Error al obtener los códigos de idioma: {e}")
+        return language_codes,500
 # Ruta para la página de inicio
 @app.route('/')
 def index():
@@ -60,27 +61,21 @@ def index():
 
 @app.route('/upload', methods=['POST'])
 def upload_files():
-    try:
-        uploaded_files = request.files.getlist('file')
-        lan = request.form.get('language')
+
+    uploaded_files = request.files.getlist('file')
+    lan = request.form.get('language')
 
         # Guardar archivos y obtener los subtítulos procesados
-        subs = process_files(uploaded_files, lan)
+    subs = process_files(uploaded_files, lan)
 
         # Generar archivo ZIP con los subtítulos
-        zip_filename = generate_zip(uploaded_files, subs)
+    zip_filename = generate_zip(uploaded_files, subs)
  
         # Generar la URL de descarga
-        zip_url = url_for('download_zip', filename=zip_filename)
+    zip_url = url_for('download_zip', filename=zip_filename)
 
         # Retornar la URL de descarga
-        return zip_url
-
-    except requests.exceptions.RequestException as e:
-        return render_template('error.html', error_message=f"Error procesando archivos: {str(e)}"), 500
-    except Exception as e:
-        return render_template('error.html', error_message=f"An unexpected error occurred: {str(e)}"), 500
-
+    return zip_url
 
 def process_files(uploaded_files, lan):
     subs = []
@@ -94,12 +89,12 @@ def process_files(uploaded_files, lan):
             filename = secure_filename(file.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
-
+            try:
             # Enviar archivo al backend y obtener subtítulo
-            subtitle = send_to_backend(filepath, filename, lan,file.mimetype)
-
+                subtitle = send_to_backend(filepath, filename, lan,file.mimetype)
+            finally:
+                os.remove(filepath)
             subs.append(subtitle)
-            os.remove(filepath)
             cont+=1
             processing_progress=round((cont/long)*100,1)
     return subs
@@ -114,20 +109,11 @@ def send_to_backend(filepath, filename, lan, mimetype):
         response.raise_for_status()  # Lanza una excepción si el código de estado de la respuesta no es 2xx
         
         return response.json()
-    
     except requests.exceptions.RequestException as e:
-        # Error de conexión o tiempo de espera
-        return {'error': f'Error de conexión: {str(e)}'}
-    
-    except requests.exceptions.HTTPError as e:
-        # Error HTTP (código de estado no 2xx)
-        return {str(e)}
-    
+        # Error de conexión , tiempo de espera, problemas con apis etc
+        abort(503,e.response.text)
     except Exception as e:
-        # Otros errores inesperados
-        return {'error': f'Error inesperado: {str(e)}'}
-
-
+        abort(500)
 
 def generate_zip(uploaded_files, subs):
     zip_filename = 'subtitles.zip'
@@ -150,6 +136,13 @@ def sse_endpoint():
     return Response(backend_response.iter_content(), content_type='text/event-stream')
 
 
+@app.errorhandler(500)
+def handle_general_error(e):
+    return f"An unexpected error occurred: {str(e)}", 500
+
+@app.errorhandler(503)
+def handle_specific_error(e):
+    return e.description, 503
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000,debug=False)

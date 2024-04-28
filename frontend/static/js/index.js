@@ -106,7 +106,7 @@ function load_languages(){
             // Manejar errores si la solicitud falla
             console.error('Error al obtener los códigos de idioma:', error);
             // Mostrar un mensaje de error al usuario, por ejemplo:
-            alert('Ocurrió un error al obtener los códigos de idioma del servidor.');
+            alert('Error con servidor backend. Imposible obtener lenguajes disponibles.');
         }
     });
 }
@@ -155,7 +155,7 @@ $('#uploadForm').submit(function(event) {
         },
         error: function(xhr, status, error) {
             // Mostrar un mensaje de error al usuario
-            alert('Ha ocurrido un error al subir los archivos. Inténtalo de nuevo más tarde.');
+            alert(xhr.responseText);
             // Desactivar el botón de submit
             $('#submitButton').prop('disabled', false);
         }
@@ -195,7 +195,7 @@ $(document).ready(function() {
             languagesLoaded = true;
             return;
         }
-        if (!languagesLoaded && $('#languageSelect option').length ==0) {
+        if (!languagesLoaded /*&& $('#languageSelect option').length ==0*/) {
             // Realizar la llamada a la API del backend para obtener los idiomas
             load_languages();
         }
