@@ -1,4 +1,4 @@
-
+import exceptions
 import configparser,concurrent.futures,time,srt,datetime,deepgram as d,json,os
 from tqdm import tqdm
 
@@ -24,8 +24,8 @@ def process_chunk(chunk_index,aud_name, dg_client, size,language):#funcion petic
                 time.sleep(40)
             else:
                 print(f"Se alcanzó el número máximo de reintentos para chunk {chunk_index}. Terminando.")
-                raise Exception('Revisa la peticion a la api o el status de la api')
-
+                #raise Exception('Revisa la peticion a la api o el status de la api')
+                raise exceptions.CustomError('Revisa la peticion a la api o el status de la api')
     return chunk_index,response
 
 def merge_subs(subs):

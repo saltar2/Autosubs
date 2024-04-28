@@ -1,5 +1,5 @@
 
-import languagecodes,unicodedata,configparser,deepl
+import languagecodes,unicodedata,configparser,deepl,exceptions
 from lingua import LanguageDetectorBuilder
 from tqdm import tqdm
 
@@ -126,7 +126,7 @@ def deepl_tr(subs,language,deepl_target_lang):
         for i, e in enumerate(english_lines):
             subs[i].content = e
     except Exception as e:
-        print("DeepL translation error:", e)
+        raise exceptions.CustomError(str(e))
 
     #----------------------------------------------------------------------------------
     #lan=translate_language_name(deepl_target_lang)

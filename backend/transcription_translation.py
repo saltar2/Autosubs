@@ -1,4 +1,4 @@
-import os,deepl_tr as deepl_tr,deepgram_tr as deepgram_tr,silero as silero,formater as formater,srt,denoiser as denoiser,concurrent.futures,time
+import os,deepl_tr as deepl_tr,deepgram_tr as deepgram_tr,silero as silero,formater as formater,srt,denoiser as denoiser,concurrent.futures,time,exceptions
 from tqdm import tqdm
 
 def process_frag(i,aud_name):
@@ -63,7 +63,9 @@ def main(audio_path,language,queue_event):#version para no web
             if(transcription_mode==2):
                 queue_event.put('Transcribiendo audio ...')
                 time.sleep(1)
+                
                 subs=deepgram_tr.deepgram_tr(u,model_size,audio_nombre,language)
+                
                 #model_size=".deepgram_"+model_size
 
                 #lan2=deepl_tr.translate_language_name(language)
@@ -84,9 +86,8 @@ def main(audio_path,language,queue_event):#version para no web
                     
                     final_subs=formater.dividir_lineas_v2(mid_subs)
 
-        except Exception as e:
-            print(e)
-            return e
+        except exceptions.CustomError as a:
+            raise 
 
         finally:
             # Eliminar todos los archivos en la carpeta vad_chunks

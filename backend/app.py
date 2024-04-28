@@ -1,5 +1,5 @@
 
-import transcription_translation as trtr,extract_audio as extract_audio,os,srt,time,threading
+import transcription_translation as trtr,extract_audio as extract_audio,os,srt,time,exceptions
 from multiprocessing import Queue
 from flask import Flask, request, jsonify,Response
 from werkzeug.utils import secure_filename
@@ -47,9 +47,7 @@ language_codes = {
     queue.put(sub)'''
 
 def principal(video_file,lan):#funcion para web
-    time.sleep(1)
    
-    
     video_filename = os.path.join(backend_app.config['TEMP'], secure_filename(video_file.filename))
     video_file.save(video_filename)
     event_queue.put('Procesando video: {}'.format(video_file.filename))
@@ -57,8 +55,10 @@ def principal(video_file,lan):#funcion para web
         audio_path=extract_audio.extract_audio_ffmpeg(os.path.join(backend_app.config['TEMP']),lan)
         
         sub=trtr.main(audio_path,lan,event_queue)
+    except exceptions.CustomError as a:
+         raise 
     except Exception as e:
-         return e
+         raise 
 
     os.remove(audio_path)
     os.remove(video_filename)
@@ -79,16 +79,12 @@ def process_video():
     lan = request.form.get('language')
     video_file= request.files['file']
     
-    # Llama a la función de procesamiento principal
-    #result_queue = Queue()
-    '''processing_thread = threading.Thread(target=principal_v2, args=(video_file, lan,result_queue))
-    processing_thread.start()
-    
-    processing_thread.join()#principal_v2(video_file, lan)'''
     try :
         subs=principal(video_file, lan)
+    except exceptions.CustomError as e:
+         return jsonify(error=str(e)),503#service unavailable
     except Exception as e:
-         return e,500
+         return jsonify(error=str(e)),500#unexpected error
     ###
     '''subs=[]
     #subtitle example
