@@ -1,4 +1,9 @@
 from flask import Flask, request ,jsonify
+
+import os,json
+
+os.environ['LD_LIBRARY_PATH'] = '/usr/local/share/freeling/APIs/python3'
+os.environ['PYTHONPATH'] = '/usr/local/share/freeling/APIs/python3'
 import pyfreeling
 
 def Analizador():
@@ -127,8 +132,12 @@ def morfo_analisis():
 
         split_response=split_text(data)
         result = mf.analyze_sentence_list(split_response)
-        print(str(result))
-        return jsonify(result)
+        #print(str(result))
+        output_handler=pyfreeling.output_json()
+        result=output_handler.PrintResults(result)
+        #print(str(result))
+        obj_json=json.loads(result)
+        return obj_json
     except Exception as e:
         return jsonify(error=str(e)), 500
 
