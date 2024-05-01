@@ -106,7 +106,7 @@ def Analizador2():
     return tk,sp,mf,tg,tg,sen,dep
 
 # inicializamos el Analizador Morfológico
-docker=True
+docker=False
 if(docker):
 
     tk,sp,mf,tagger = Analizador()
@@ -121,7 +121,7 @@ def split_text(data):
         l=tk.tokenize(data)
         sentences = sp.split(sid,l,False)
         sp.close_session(sid)
-        print(str(sentences))
+
         return sentences
 
 
