@@ -106,7 +106,7 @@ def Analizador2():
     return tk,sp,mf,tg,tg,sen,dep
 
 # inicializamos el Analizador Morfológico
-docker=True
+docker=True# turn this var false to debug
 if(docker):
 
     tk,sp,mf,tagger = Analizador()
@@ -125,13 +125,30 @@ def split_text(data):
         return sentences
 
 
+@backend_freeling.route("/spl",methods=['POST'])
+def spl():
+    try:
+        data = request.json['sentences']
+
+        split_response=split_text(data)
+        
+        output_handler=pyfreeling.output_json()
+        result=output_handler.PrintResults(split_response)
+        obj_json=json.loads(result)
+        return obj_json
+    except Exception as e:
+        return jsonify(error=str(e)), 500
+    
 @backend_freeling.route("/morfo",methods=['POST'])
 def morfo_analisis():
     try:
         data = request.json['sentences']
 
         split_response=split_text(data)
-        result = mf.analyze_sentence_list(split_response)
+        if docker:
+            result = mf.analyze(split_response)
+        else:
+            result = mf.analyze_sentence_list(split_response)
         #print(str(result))
         output_handler=pyfreeling.output_json()
         result=output_handler.PrintResults(result)
