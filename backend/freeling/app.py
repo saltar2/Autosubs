@@ -1,7 +1,57 @@
 from flask import Flask, request ,jsonify
+
+import os,json
+
+os.environ['LD_LIBRARY_PATH'] = '/usr/local/share/freeling/APIs/python3'
+os.environ['PYTHONPATH'] = '/usr/local/share/freeling/APIs/python3'
 import pyfreeling
 
 def Analizador():
+# inicilizamos freeling
+    DATA = "/usr/local"+"/share/freeling/"
+#    DATA = "/usr"+"/share/freeling/"
+# Init locales
+    pyfreeling.util_init_locale("default")
+
+# create options set for maco analyzer. Default values are Ok, except for data files.
+    LANG="es"
+    op= pyfreeling.maco_options(LANG)
+    op.set_data_files( "", 
+                   DATA + "common/punct.dat",
+                   DATA + LANG + "/dicc.src",
+                   DATA + LANG + "/afixos.dat",
+                   "",
+                   DATA + LANG + "/locucions.dat", 
+                   DATA + LANG + "/np.dat",
+                   DATA + LANG + "/quantities.dat",
+                   DATA + LANG + "/probabilitats.dat")
+
+# create analyzers
+    tk=pyfreeling.tokenizer(DATA+LANG+"/tokenizer.dat")
+    sp=pyfreeling.splitter(DATA+LANG+"/splitter.dat")#separador
+    mf=pyfreeling.maco(op)#morfo analisis
+# create tagger
+    tagger = pyfreeling.hmm_tagger(DATA + LANG +"/tagger.dat",True,2)
+
+# activate morpho modules to be used in next call
+
+    mf.set_active_options (False,  # UserMap 
+                          True,  # NumbersDetection,  
+                          True,  # PunctuationDetection,   
+                          True,  # DatesDetection,    
+                          True,  # DictionarySearch,  
+                          True,  # AffixAnalysis,  
+                          False, # CompoundAnalysis, 
+                          True,  # RetokContractions,
+                          True,  # MultiwordsDetection,  
+                          True,  # NERecognition,     
+                          False, # QuantitiesDetection,  
+                          True); # ProbabilityAssignment     
+
+ 
+    return tk,sp,mf,tagger
+
+def Analizador2():
 # inicilizamos freeling
     DATA = "/usr/local"+"/share/freeling/"
     LANG = "es"
@@ -56,11 +106,15 @@ def Analizador():
     return tk,sp,mf,tg,tg,sen,dep
 
 # inicializamos el Analizador Morfológico
-tk,sp,mf,tg,tg,sen,dep = Analizador()
+docker=True
+if(docker):
+
+    tk,sp,mf,tagger = Analizador()
+else:
+   tk,sp,mf,tg,tg,sen,dep = Analizador2() 
 
 # create the Flask app
 backend_freeling = Flask(__name__)
-
 
 def split_text(data):
         sid=sp.open_session()
@@ -78,8 +132,12 @@ def morfo_analisis():
 
         split_response=split_text(data)
         result = mf.analyze_sentence_list(split_response)
-        print(str(result))
-        return jsonify(result)
+        #print(str(result))
+        output_handler=pyfreeling.output_json()
+        result=output_handler.PrintResults(result)
+        #print(str(result))
+        obj_json=json.loads(result)
+        return obj_json
     except Exception as e:
         return jsonify(error=str(e)), 500
 
