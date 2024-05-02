@@ -25,7 +25,6 @@ RUN export FL_VERSION=4.2 && \
     tar xzf FreeLing-langs-src-$FL_VERSION.tar.gz && \
     rm -rf FreeLing-src-$FL_VERSION.tar.gz FreeLing-langs-src-$FL_VERSION.tar.gz && \
     cd /tmp/FreeLing-$FL_VERSION && \
-
     mkdir build && \
     cd build && \
     echo "******** Compiling FreeLing... please wait" && \
