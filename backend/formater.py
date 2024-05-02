@@ -3,7 +3,7 @@ from tqdm import tqdm
 #from spacy.matcher import Matcher,DependencyMatcher
 #from spacy import displacy
 #from spacy_rules import puntuation_rules_left,puntuation_rules_right,grammatical_rules_v2
-import cervantes_parser as cervantes
+import freeling_parser as freeling
 #nlp = spacy.load("es_dep_news_trf")
 nlp = spacy.load("es_core_news_sm")
 
@@ -25,19 +25,6 @@ for rule in grammatical_rules_v2:
     gram_matcher.add(rule["label"], [rule["pattern"]])'''
 '''for rule in grammatical_patterns_v2:
     gram_matcher_dependency.add(rule["nombre"], [rule["patron"]])'''
-
-def ajustar_duraciones(new_subtitles, margin=0.05):
-    for i in range(1, len(new_subtitles) - 1):
-        current_subtitle = new_subtitles[i]
-        previous_subtitle = new_subtitles[i - 1]
-        next_subtitle = new_subtitles[i + 1]
-
-        if current_subtitle.end - current_subtitle.start < srt.timedelta(seconds=1):
-            # Verifica si hay espacio para ajustar el inicio y el final
-            if (current_subtitle.start - previous_subtitle.end).total_seconds() >= margin and (next_subtitle.start - current_subtitle.end).total_seconds() >= margin:
-                # Ajusta el inicio y el final del subtítulo
-                current_subtitle.start -= srt.timedelta(seconds=0.2)#al principio
-                current_subtitle.end += srt.timedelta(seconds=0.3)#al final
 
 
 def ajustar_duraciones_v2(new_subtitles, margin=0.05):
@@ -145,41 +132,16 @@ def dividir_lineas_v2(subtitles):#main function
     #params
     max_characters=40
     margin=8
-    max_len=20
-    full_list=[]
-    sub_list=[]
-    list_positions=[]
-    for subtitle in subtitles:
-        text=subtitle.content
-        text_len=sum(1 for char in text if ord(char) < 128)
-        if  text_len >= max_characters+margin:
-            sub_list.append(subtitle.content)
-            full_list.append(subtitle.content)
-            if(len(sub_list)==max_len):
-                list_positions.extend([ t for t in cervantes.process_text_v2(sub_list)])
-                
-                sub_list=[]
-            else:    
-                sub_list[len(sub_list)-1]= sub_list[len(sub_list)-1]+ " @ "
 
-    if sub_list!=[]:
-        sub_list[-1]=sub_list[-1].split('@')[0]
-        list_positions.extend([ t for t in cervantes.process_text_v2(sub_list)])
-    
-    aux=0
     for subtitle in tqdm(subtitles):
         text = subtitle.content
-        if aux < len(full_list):
-            
-            init_line=full_list[aux]
-        
-            if  text==init_line:
-                lines,info = split_sentence_v3(text,list_positions[aux])
-                aux+=1
-                info_file.append(info)
+        text_len=sum(1 for char in text if ord(char) < 128)
+        matches=freeling.matches_freeling(text)
+        if text_len >= max_characters+margin:
+            lines,info = split_sentence_v3(text,matches)   
+            info_file.append(info)
             #lines=divide_oraciones_with_gpt(text, subtitle.end.total_seconds() - subtitle.start.total_seconds())
-            else:
-                lines = [text]
+            
         else:
             lines = [text]
 
@@ -208,7 +170,7 @@ def dividir_lineas_v2(subtitles):#main function
         info.write(json.dumps(info_file, indent=4))'''
     return new_subtitles
 
-debug_spacy=False
+'''debug_spacy=False
 if debug_spacy==True:
     def main():
         import time
@@ -222,6 +184,6 @@ if debug_spacy==True:
         end_time=time.time()
         print("Tiempo total : "+str((end_time-start_time)/60)+" minutos") 
 
-    main()
+    main()'''
 
 

@@ -125,7 +125,7 @@ def split_text(data):
         return sentences
 
 
-@backend_freeling.route("/spl",methods=['POST'])
+'''@backend_freeling.route("/spl",methods=['POST'])
 def spl():
     try:
         data = request.json['sentences']
@@ -137,7 +137,7 @@ def spl():
         obj_json=json.loads(result)
         return obj_json
     except Exception as e:
-        return jsonify(error=str(e)), 500
+        return jsonify(error=str(e)), 500'''
     
 @backend_freeling.route("/morfo",methods=['POST'])
 def morfo_analisis():
