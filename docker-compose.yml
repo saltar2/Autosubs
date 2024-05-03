@@ -1,4 +1,3 @@
-version: '3.5'
 
 services:
 
@@ -6,28 +5,45 @@ services:
     build: ./backend
     image: autosubs_backend
     depends_on:
-      - freeling
+      freeling:
+        condition: service_healthy
     networks:
       - my-network
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://backend:5001/healthcheck || exit 1
+      interval: 25s
+      retries: 10
+      start_period: 20s
+      timeout: 10s
 
   frontend:
     build: ./frontend
     image: autosubs_frontend
     depends_on:
-      - backend  # Indica que el frontend depende del backend
+      backend:  # Indica que el frontend depende del backend
+        condition: service_healthy
     ports:
       - "5000:5000"  # Puertos para acceder al frontend
-      #host:container
-    #extra_hosts:
-    #  - "autosubs.es:172.19.0.3"
     networks:
       - my-network
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://frontend:5000/healthcheck || exit 1
+      interval: 25s
+      retries: 10
+      start_period: 20s
+      timeout: 10s
   
   freeling:
     build: ./backend/freeling
     image: autosubs_backend_freeling
     networks:
       - my-network
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://freeling:5002/healthcheck || exit 1
+      interval: 15s
+      retries: 10
+      start_period: 10s
+      timeout: 10s
 
 
     

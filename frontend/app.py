@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, send_file,jsonify,abort,Response
-import os, requests,time
+import os, requests,time,threading
+from multiprocessing import Queue
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import HTTPException
 import zipfile
@@ -28,7 +29,11 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['DOWNLOAD_FOLDER'], exist_ok=True)
 
 processing_progress=0
+num_files=0
+num_ses_messages=5
 language_codes={}
+sse_connection_with_backend=None
+event_queue = Queue()
 
 # Función para verificar la extensión del archivo
 def allowed_file(filename):
@@ -82,8 +87,10 @@ def process_files(uploaded_files, lan):
     
     global processing_progress
     processing_progress=0
-    long=len(uploaded_files)
-    cont=0
+    global num_files
+    num_files=len(uploaded_files)
+    #long=len(uploaded_files)*num_ses_messages
+    #cont=0
     for file in uploaded_files:
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
@@ -95,8 +102,8 @@ def process_files(uploaded_files, lan):
             finally:
                 os.remove(filepath)
             subs.append(subtitle)
-            cont+=1
-            processing_progress=round((cont/long)*100,1)
+            #cont+=1
+            #processing_progress=round((cont/long)*100,1)
     return subs
 
 def send_to_backend(filepath, filename, lan, mimetype):
@@ -130,10 +137,45 @@ def generate_zip(uploaded_files, subs):
 def download_zip(filename):
     return send_file(os.path.join(app.config['DOWNLOAD_FOLDER'], filename), as_attachment=True)
 
-@app.route('/event')
+'''@app.route('/event')
 def sse_endpoint():
     backend_response = requests.get(url_base+'/event', stream=True)
-    return Response(backend_response.iter_content(), content_type='text/event-stream')
+    #global processing_progress,num_files
+    #max_long=num_files*num_ses_messages
+    #cont=processing_progress+1
+    #processing_progress=round((cont/max_long)*100,1)
+    return Response(backend_response.iter_content(), content_type='text/event-stream')'''
+@app.route('/event')
+def sse_endpoint():
+    if sse_connection_with_backend is None:
+        get_sse_endpoint_backend()
+    def generate_event():
+        while True:
+            event=event_queue.get()
+            yield "data: {}\n\n".format(event)
+            #print(event)
+            #time.sleep(0.6)     
+    return Response(generate_event(), content_type='text/event-stream')
+
+def get_sse_endpoint_backend():
+    backend_response = requests.get(url_base+'/event', stream=True)
+    global sse_connection_with_backend
+    sse_connection_with_backend=backend_response.iter_lines()
+
+    def process_backend_response():
+        for event in sse_connection_with_backend:
+            global processing_progress,num_files,num_ses_messages
+            max_long=num_files*num_ses_messages
+            processing_progress+=1
+            processing_progress=round((processing_progress/max_long)*100,1)
+            data=event.decode('utf-8').replace('data: ', '').strip()
+            print(data)
+            event_queue.put(str(data))
+            
+       
+    print("SSE with backend connected")
+    threading.Thread(target=process_backend_response).start()
+    
 
 
 @app.errorhandler(500)
@@ -143,7 +185,11 @@ def handle_general_error(e):
 @app.errorhandler(503)
 def handle_specific_error(e):
     return e.description, 503
-
+@app.route('/healthcheck')
+def healthcheck():
+    return 'OK', 200
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000,debug=False)
+    app.run(host='0.0.0.0', port=5000,threaded=True,debug=False)
+    
+    
 

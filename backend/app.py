@@ -110,13 +110,15 @@ def sse_endpoint():
         while True:
             event=event_queue.get()
             yield "data: {}\n\n".format(event)
-            print(event)
+            #print(event)
             #time.sleep(0.6)     
     return Response(generate_event(), content_type='text/event-stream')
-
+@backend_app.route('/healthcheck')
+def healthcheck():
+    return 'OK', 200
 if __name__ == '__main__':
     backend_app.run(host='0.0.0.0', port=5001,threaded=True,debug =False)  # Cambia el puerto según tus necesidades
-    print("")
+    
     
 '''lan="japanese"
 audio_path=extract_audio.extract_audio_ffmpeg("/home/salva/Autosubs/backend/temp",lan)

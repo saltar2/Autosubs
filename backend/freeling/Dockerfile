@@ -46,7 +46,7 @@ RUN export FL_VERSION=4.2 && \
             libboost-regex-dev libboost-system-dev \
             libboost-program-options-dev libboost-thread-dev \
 	        libboost-filesystem-dev zlib1g-dev\
-            cmake wget swig python3-dev && \
+            cmake swig python3-dev && \
     apt-get clean -y #&& \
     rm -rf /var/lib/apt/lists/*         
 
@@ -74,7 +74,7 @@ COPY es-verbs.txt /usr/local/lib/python3.8/site-packages/pattern/text/es/
 
 # Bundle app source
 COPY app.py ./
-EXPOSE 5002
+#EXPOSE 5002
 
 
 CMD ["python3", "app.py"]

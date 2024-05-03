@@ -107,7 +107,7 @@ def Analizador2():
 
 # inicializamos el Analizador Morfológico
 
-docker=False# turn this var false to debug
+docker=True# turn this var false to debug
 
 if(docker):
 
@@ -160,7 +160,10 @@ def morfo_analisis():
         return obj_json
     except Exception as e:
         return jsonify(error=str(e)), 500
-
+    
+@backend_freeling.route('/healthcheck')
+def healthcheck():
+    return 'OK', 200
 # run the app
 if __name__ == '__main__':
     backend_freeling.run(host='0.0.0.0',port=5002,threaded=True)

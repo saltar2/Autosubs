@@ -7,7 +7,7 @@ WORKDIR /app
 # Instala las dependencias necesarias
 COPY requirements.txt .
 RUN pip install -r requirements.txt
-
+RUN apt-get update && apt-get install -y wget
 # Expone el puerto 5000 para acceder a la aplicación Flask
 EXPOSE 5000
 

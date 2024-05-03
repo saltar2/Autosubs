@@ -10,9 +10,12 @@ def main(audio_path,language,queue_event):#version para no web
 
     transcription=True
     transcription_mode=2 # mode 2 deepgram 
-    translation=True
+
+    translation=False
+
     denoise=True
     denoise_ant=False# false indica que no se hace denoise antes de trocear el audio sino despues, true indica lo contrario
+
     better_formating=True
     ####deepgram models
     # si usas otro modelo mira max workers en deepgram_tr.py
@@ -57,7 +60,7 @@ def main(audio_path,language,queue_event):#version para no web
                  for _ in tqdm(concurrent.futures.as_completed(futures), total=len(futures)):
                      pass
 
-        subs=[]
+        final_subs=[]
         
         try:
             if(transcription_mode==2):
@@ -65,7 +68,7 @@ def main(audio_path,language,queue_event):#version para no web
                 time.sleep(1)
                 
                 subs=deepgram_tr.deepgram_tr(u,model_size,audio_nombre,language)
-                
+                final_subs=subs
                 #model_size=".deepgram_"+model_size
 
                 #lan2=deepl_tr.translate_language_name(language)
@@ -78,6 +81,7 @@ def main(audio_path,language,queue_event):#version para no web
                 queue_event.put('Traduciendo subtitulos ...')
                 
                 mid_subs=deepl_tr.deepl_tr(subs,language,deepl_target_lang)
+                final_subs=mid_subs
                 if(better_formating):
                     #out_path_formated=out_path_deepl.split(".srt")[0]
                     #out_path_formated=out_path_formated+"_formated.srt"
