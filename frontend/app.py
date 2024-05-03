@@ -43,7 +43,9 @@ def allowed_file(filename):
 @app.route('/progress',methods=['GET'])
 def prog_var():
     global processing_progress
-    return jsonify({'progress': processing_progress})
+    max_long=num_files*num_ses_messages
+    progress=round((processing_progress/max_long)*100,1)
+    return jsonify({'progress': progress})
 
 @app.route('/language_codes',methods=['GET'])
 def codes():
@@ -164,13 +166,12 @@ def get_sse_endpoint_backend():
 
     def process_backend_response():
         for event in sse_connection_with_backend:
-            global processing_progress,num_files,num_ses_messages
-            max_long=num_files*num_ses_messages
-            processing_progress+=1
-            processing_progress=round((processing_progress/max_long)*100,1)
-            data=event.decode('utf-8').replace('data: ', '').strip()
-            print(data)
-            event_queue.put(str(data))
+            global processing_progress
+            data=event.decode('utf-8')
+            if(data != ''):
+                processing_progress+=1
+                print(data)
+                event_queue.put(str(data))
             
        
     print("SSE with backend connected")

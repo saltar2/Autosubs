@@ -74,6 +74,7 @@ function receiveSSE() {
     eventSource.onerror = function(event) {
         console.error('Error en la conexión SSE', event);
         eventSource.close();
+        receiveSSE()
     };
     eventSource.addEventListener('message', function(event) {
         console.log('Evento SSE recibido del servidor:', event.data);
