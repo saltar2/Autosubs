@@ -109,7 +109,8 @@ def sse_endpoint():
     def generate_event():
         while True:
             event=event_queue.get()
-            yield "data: {}\n\n".format(event)
+            formated_event= f"{event}\n\n"
+            yield formated_event
             #print(event)
             #time.sleep(0.6)     
     return Response(generate_event(), content_type='text/event-stream')
