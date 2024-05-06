@@ -125,21 +125,6 @@ def split_text(data):
         sp.close_session(sid)
 
         return sentences
-
-
-'''@backend_freeling.route("/spl",methods=['POST'])
-def spl():
-    try:
-        data = request.json['sentences']
-
-        split_response=split_text(data)
-        
-        output_handler=pyfreeling.output_json()
-        result=output_handler.PrintResults(split_response)
-        obj_json=json.loads(result)
-        return obj_json
-    except Exception as e:
-        return jsonify(error=str(e)), 500'''
     
 @backend_freeling.route("/morfo",methods=['POST'])
 def morfo_analisis():

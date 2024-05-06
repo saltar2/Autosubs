@@ -28,19 +28,29 @@ RUN export FL_VERSION=4.2 && \
     mkdir build && \
     cd build && \
     echo "******** Compiling FreeLing... please wait" && \
-    cmake .. -DJAVA_API=OFF -DTRACES=ON -DPYTHON3_API=ON -Wno-dev  && \
-    make -j2 && \
+    #cmake .. -DJAVA_API=OFF -DTRACES=ON -DPYTHON3_API=ON -Wno-dev  && \
+    cmake .. -DJAVA_API=OFF -DTRACES=OFF -DPYTHON3_API=ON  && \
+    make -j4 && \
     echo "******** Installing FreeLing... please wait" && \
 #    make -j2 install DCMAKE_INSTALL_PREFIX=$FLINSTALL && \
-    make -j2 install && \
+    make -j4 install 
 #
 #   Uncomment to remove unwanted languages data to save space && \
-#   rm -rf /usr/local/share/freeling/ru && \
-#   rm -rf /usr/local/share/freeling/cy && \
-#   rm -rf /usr/local/share/freeling/pt && \
+RUN rm -rf /usr/local/share/freeling/ru && \
+    rm -rf /usr/local/share/freeling/cy && \
+    rm -rf /usr/local/share/freeling/as && \
+    rm -rf /usr/local/share/freeling/ca && \
+    rm -rf /usr/local/share/freeling/de && \
+    rm -rf /usr/local/share/freeling/en && \
+    rm -rf /usr/local/share/freeling/fr && \
+    rm -rf /usr/local/share/freeling/gl && \
+    rm -rf /usr/local/share/freeling/hr && \
+    rm -rf /usr/local/share/freeling/it && \
+    rm -rf /usr/local/share/freeling/sl && \
+    rm -rf /usr/local/share/freeling/pt 
 #   etc ....
 #
-    cd && \
+RUN cd && \
     rm -rf /tmp/FreeLing-$FL_VERSION && \
     apt-get --purge -y remove build-essential libicu-dev \
             libboost-regex-dev libboost-system-dev \
