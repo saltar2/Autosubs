@@ -84,7 +84,7 @@ def deepgram_tr(u, model_size,audio_nombre,language):
             if chunk_results['transcript']!='':
                 chunk=chunk_results["paragraphs"]["paragraphs"]
                 for r in chunk:
-                    speaker=r["speaker"]
+                    speaker=str(r["speaker"])
                     for sen in r["sentences"]:
                         start = sen["start"]+u[c][0]["offset"]
                         end = sen["end"]+u[c][0]["offset"]

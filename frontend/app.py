@@ -175,6 +175,7 @@ def get_sse_endpoint_backend():
             
        
     print("SSE with backend connected")
+    
     threading.Thread(target=process_backend_response).start()
     
 
@@ -186,6 +187,7 @@ def handle_general_error(e):
 @app.errorhandler(503)
 def handle_specific_error(e):
     return e.description, 503
+
 @app.route('/healthcheck')
 def healthcheck():
     return 'OK', 200

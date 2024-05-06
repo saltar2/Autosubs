@@ -1,7 +1,7 @@
 
-import transcription_translation as trtr,extract_audio as extract_audio,os,srt,time,exceptions
+import transcription_translation as trtr,extract_audio as extract_audio,os,srt,time,exceptions,logging
 from multiprocessing import Queue
-from flask import Flask, request, jsonify,Response
+from flask import Flask, request, jsonify,Response,abort
 from werkzeug.utils import secure_filename
 
 event_queue = Queue()
@@ -55,9 +55,9 @@ def principal(video_file,lan):#funcion para web
         audio_path=extract_audio.extract_audio_ffmpeg(os.path.join(backend_app.config['TEMP']),lan)
         
         sub=trtr.main(audio_path,lan,event_queue)
-    except exceptions.CustomError as a:
+    except exceptions.CustomError:
          raise 
-    except Exception as e:
+    except Exception:
          raise 
 
     os.remove(audio_path)
@@ -68,6 +68,10 @@ backend_app = Flask(__name__)
 backend_app.config['MAX_CONTENT_LENGTH'] = 2048 * 1024 * 1024#permitimos 2 GB
 backend_app.config['TEMP']='temp'
 os.makedirs(backend_app.config['TEMP'], exist_ok=True)
+
+file_handler = logging.FileHandler('error.log')
+file_handler.setLevel(logging.ERROR)  # Log only ERROR level messages
+backend_app.logger.addHandler(file_handler)
 
 @backend_app.route('/language_codes', methods=['GET'])
 def get_language_codes():
@@ -82,22 +86,10 @@ def process_video():
     try :
         subs=principal(video_file, lan)
     except exceptions.CustomError as e:
-         return jsonify(error=str(e)),503#service unavailable
+         abort(503,e)#service unavailable
     except Exception as e:
-         return jsonify(error=str(e)),500#unexpected error
-    ###
-    '''subs=[]
-    #subtitle example
-    import srt,datetime
-    
-    sub=srt.Subtitle(
-                        index=1,
-                        start=datetime.timedelta(seconds=2),
-                        end=datetime.timedelta(seconds=5),
-                        content='Subtitulo de prueba',)
-    subs.append(sub)
-    time.sleep(5)'''
-    ###
+         abort(500,e)#unexpected error
+
     result=srt.compose(subs)
 
     # Devuelve el resultado al frontend
@@ -114,9 +106,21 @@ def sse_endpoint():
             #print(event)
             #time.sleep(0.6)     
     return Response(generate_event(), content_type='text/event-stream')
+
+@backend_app.errorhandler(500)
+def handle_general_error(e):
+    backend_app.logger.error(e)
+    return jsonify(error=str(e)),500
+
+@backend_app.errorhandler(503)
+def handle_specific_error(e):
+    backend_app.logger.error(e)
+    return jsonify(error=str(e)),503
+
 @backend_app.route('/healthcheck')
 def healthcheck():
     return 'OK', 200
+
 if __name__ == '__main__':
     backend_app.run(host='0.0.0.0', port=5001,threaded=True,debug =False)  # Cambia el puerto según tus necesidades
     

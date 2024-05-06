@@ -90,7 +90,7 @@ def main(audio_path,language,queue_event):#version para no web
                     
                     final_subs=formater.dividir_lineas_v2(mid_subs)
 
-        except exceptions.CustomError as a:
+        except Exception:
             raise 
 
         finally:
