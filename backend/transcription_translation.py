@@ -11,7 +11,7 @@ def main(audio_path,language,queue_event):#version para no web
     transcription=True
     transcription_mode=2 # mode 2 deepgram 
 
-    translation=False
+    translation=True
 
     denoise=True
     denoise_ant=False# false indica que no se hace denoise antes de trocear el audio sino despues, true indica lo contrario
@@ -28,7 +28,7 @@ def main(audio_path,language,queue_event):#version para no web
 
     # @markdown Advanced settings:
     vad_threshold = 0.24  # @param {type:"number"} umbral de decision si hay audio de 0 a 1
-    chunk_threshold = 0.12  # @param {type:"number"} maxima longitud de silencio entre fragmentos de audio
+    chunk_threshold = 0.1  # @param {type:"number"} maxima longitud de silencio entre fragmentos de audio
     deepl_target_lang = "ES"  
     max_attempts = 3  
     assert max_attempts >= 1
