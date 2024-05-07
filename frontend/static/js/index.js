@@ -2,7 +2,7 @@ var scrollTimeout;
 var autoScrollEnabled = true;
 var languagesLoaded = false;
 var eventSource;
-var eventCondition = false;
+//var eventCondition = false;
 
 function scrollToBottom() {
     var messageBox = document.getElementById('messages');
@@ -65,7 +65,7 @@ function toggleMessageBox() {
 }
 
 function receiveSSE() {
-    var eventSource = new EventSource('/event'); // Ruta del endpoint SSE en tu servidor Flask
+    eventSource = new EventSource('/event'); // Ruta del endpoint SSE en tu servidor Flask
     eventSource.onopen = function() {
         console.log('Conexión SSE establecida');
         //var messageBox = document.getElementById('messages');
@@ -74,9 +74,9 @@ function receiveSSE() {
     eventSource.onerror = function(event) {
         console.error('Error en la conexión SSE', event);
         eventSource.close();
-        receiveSSE()
+        //receiveSSE()
     };
-    eventSource.addEventListener('message', function(event) {
+    eventSource.addEventListener("message", function(event) {
         console.log('Evento SSE recibido del servidor:', event.data);
         updateProgress();
         // Actualiza el contenido del cuadro de mensajes en la interfaz web
@@ -86,7 +86,6 @@ function receiveSSE() {
             scrollToBottom();
         }
     });
-    return eventSource;
 }
 function load_languages(){
     $.ajax({
@@ -161,10 +160,10 @@ $('#uploadForm').submit(function(event) {
             $('#submitButton').prop('disabled', false);
         }
     });
-    if (!eventCondition){
-        eventSource=receiveSSE();
-        eventCondition=true
-    }
+    //if (!eventCondition){
+        
+    //    eventCondition=true
+    //}
      
     document.getElementById('messages').addEventListener('scroll', handleScroll);
 });
@@ -186,7 +185,7 @@ $(document).ready(function() {
         load_languages();
     }
     
-    
+    receiveSSE();
     // Evento para detectar cuando se selecciona un idioma por primera vez
     $('#languageSelect').on('click', function() {
         // Verificar si los idiomas ya se han cargado

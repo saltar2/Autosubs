@@ -10,9 +10,9 @@ import zipfile
 app = Flask(__name__)
 
 #docker url
-url_base='http://backend:5001'
+#url_base='http://backend:5001'
 #local url
-#url_base='http://localhost:5001'
+url_base='http://localhost:5001'
 # Configuración de la subida de archivos
 
 UPLOAD_FOLDER = 'uploads'
@@ -68,7 +68,7 @@ def index():
 
 @app.route('/upload', methods=['POST'])
 def upload_files():
-
+    
     uploaded_files = request.files.getlist('file')
     lan = request.form.get('language')
 
@@ -118,10 +118,10 @@ def send_to_backend(filepath, filename, lan, mimetype):
         response.raise_for_status()  # Lanza una excepción si el código de estado de la respuesta no es 2xx
         
         return response.json()
-    except requests.exceptions.RequestException as e:
+    except requests.exceptions.RequestException :
         # Error de conexión , tiempo de espera, problemas con apis etc
-        abort(503,e.response.text)
-    except Exception as e:
+        abort(503)
+    except Exception :
         abort(500)
 
 def generate_zip(uploaded_files, subs):
@@ -149,14 +149,13 @@ def sse_endpoint():
     return Response(backend_response.iter_content(), content_type='text/event-stream')'''
 @app.route('/event')
 def sse_endpoint():
+    global sse_connection_with_backend
     if sse_connection_with_backend is None:
         get_sse_endpoint_backend()
     def generate_event():
         while True:
             event=event_queue.get()
-            yield "data: {}\n\n".format(event)
-            #print(event)
-            #time.sleep(0.6)     
+            yield "event:message\ndata: {}\n\n".format(event)  
     return Response(generate_event(), content_type='text/event-stream')
 
 def get_sse_endpoint_backend():
@@ -172,8 +171,7 @@ def get_sse_endpoint_backend():
                 processing_progress+=1
                 print(data)
                 event_queue.put(str(data))
-            
-       
+             
     print("SSE with backend connected")
     
     threading.Thread(target=process_backend_response).start()
@@ -182,11 +180,20 @@ def get_sse_endpoint_backend():
 
 @app.errorhandler(500)
 def handle_general_error(e):
-    return f"An unexpected error occurred: {str(e)}", 500
+    if isinstance(e,requests.exceptions.ChunkedEncodingError):
+        global sse_connection_with_backend
+        sse_connection_with_backend=None
+    else:
+        return f"An unexpected error occurred: {str(e)}", 500
 
 @app.errorhandler(503)
 def handle_specific_error(e):
     return e.description, 503
+
+@app.errorhandler(requests.exceptions.ChunkedEncodingError)
+def handle_brute_desconection_with_backend():
+    global sse_connection_with_backend
+    sse_connection_with_backend=None
 
 @app.route('/healthcheck')
 def healthcheck():
