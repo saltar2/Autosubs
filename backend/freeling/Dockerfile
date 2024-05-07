@@ -1,6 +1,7 @@
 #FROM python:3.8.16-buster AS builder
 #FROM python:3.10-slim
-FROM python:3.10-buster
+#FROM python:3.10-buster
+FROM ubuntu:22.04
 
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -12,7 +13,7 @@ RUN echo "******** Installing dependencies... please wait" && \
                            libicu-dev libboost-regex-dev libboost-system-dev \
                            libboost-program-options-dev libboost-thread-dev \
                            libboost-filesystem-dev zlib1g-dev \
-                           swig python3-dev default-jdk && \
+                           swig python3-dev default-jdk python3-pip && \
     ( (echo en_US.UTF-8 UTF-8 >> /var/lib/locales/supported.d/en && locale-gen) || \
       (sed -i 's/^# \(en_US.UTF-8\)/\1/' /etc/locale.gen && locale-gen) || \
       locale-gen en_US.UTF-8 )
@@ -73,7 +74,7 @@ RUN cd && \
             libboost-regex-dev libboost-system-dev \
             libboost-program-options-dev libboost-thread-dev \
 	        libboost-filesystem-dev zlib1g-dev\
-            cmake swig python3-dev && \
+            cmake swig && \
     apt-get clean -y #&& \
     rm -rf /var/lib/apt/lists/*         
 

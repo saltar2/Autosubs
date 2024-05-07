@@ -1,5 +1,6 @@
 # Usa Ubuntu 22.04 como la imagen base
-FROM ubuntu:22.04
+#FROM ubuntu:22.04
+FROM python:3.10-buster
 
 # Actualiza e instala las dependencias necesarias
 RUN apt-get update && apt-get install -y \
@@ -9,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     automake\
     autoconf\
     libtool\
+    build-essential \
     wget && apt autoclean
 
 # Define el directorio de trabajo predeterminado
@@ -29,12 +31,13 @@ RUN python3 -c "import torch; torch.hub.load(repo_or_dir='snakers4/silero-vad', 
 
 #denoiser
 # Clona el repositorio rnnoise, configura y compila
-RUN git clone --branch v0.2 https://github.com/xiph/rnnoise.git \
+RUN git clone https://github.com/xiph/rnnoise.git \
+#RUN git clone --branch v0.2 https://github.com/xiph/rnnoise.git \
     && cd rnnoise \
     && ./autogen.sh \
     && ./configure \
-    && make \
-    && make install
+    && make  -j4 \
+    && make -j4 install 
 
 
 
