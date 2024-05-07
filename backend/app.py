@@ -30,26 +30,12 @@ language_codes = {
     "ukrainian": ["uk"]
 }
 
-'''def principal_v2(video_file,lan,queue):#funcion para web
-    time.sleep(1)
-    event_queue.put('Procesando video: {}'.format(video_file.filename))
-    
-    video_filename = os.path.join(backend_app.config['TEMP'], secure_filename(video_file.filename))
-    video_file.save(video_filename)
-    event_queue.put('Extrayendo audio ...')
-    time.sleep(1)
-    audio_path=extract_audio.extract_audio_ffmpeg(os.path.join(backend_app.config['TEMP']),lan)
-    
-    sub=trtr.main(audio_path,lan,event_queue)
-
-    os.remove(audio_path)
-    os.remove(video_filename)
-    queue.put(sub)'''
 
 def principal(video_file,lan):#funcion para web
    
     video_filename = os.path.join(backend_app.config['TEMP'], secure_filename(video_file.filename))
     video_file.save(video_filename)
+    time.sleep(2)
     event_queue.put('Procesando video: {}'.format(video_file.filename))
     try:
         audio_path=extract_audio.extract_audio_ffmpeg(os.path.join(backend_app.config['TEMP']),lan)
@@ -103,8 +89,8 @@ def sse_endpoint():
             event=event_queue.get()
             formated_event= f"{event}\n\n"
             yield formated_event
-            #print(event)
-            #time.sleep(0.6)     
+            print(event)
+    
     return Response(generate_event(), content_type='text/event-stream')
 
 @backend_app.errorhandler(500)
@@ -125,13 +111,4 @@ if __name__ == '__main__':
     backend_app.run(host='0.0.0.0', port=5001,threaded=True,debug =False)  # Cambia el puerto según tus necesidades
     
     
-'''lan="japanese"
-audio_path=extract_audio.extract_audio_ffmpeg("/home/salva/Autosubs/backend/temp",lan)
-    
-sub=trtr.main(audio_path,lan,event_queue)
-result=srt.compose(sub)
-name='temp/'+os.path.splitext(os.path.basename(audio_path))[0]+".srt"
-with open(name, "a", encoding='utf-8') as a:
-    a.write(result)
 
-os.remove(audio_path)'''

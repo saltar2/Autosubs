@@ -11,7 +11,8 @@ scripts_not_used*
 uploads*
 downloads*
 temp*
-#Freeling*
+
 
 backend/FreeLing/
-backend/FreeLing
+
+backend/error.log
