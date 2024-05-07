@@ -1,9 +1,9 @@
-import json,spacy,requests
+import json,spacy,requests,time 
 from spacy_rules import puntuation_rules_left,puntuation_rules_right
 from spacy.matcher import Matcher
 
-backend_freeling='http://localhost:5002/morfo'
-#backend_freeling='http://freeling:5002/morfo'
+#backend_freeling='http://localhost:5002/morfo'
+backend_freeling='http://freeling:5002/morfo'
 
 nlp = spacy.load("es_core_news_sm")
 punt_matcher_left=Matcher(nlp.vocab)
@@ -29,8 +29,17 @@ def parser(json_obj,sentence):
         for token in a["tokens"]:
             morfo=token['analysis'][0]['tag']
             if str(morfo).startswith(('C','SP')):#C significa conjuncion y S significa preposicion   https://freeling-user-manual.readthedocs.io/en/v4.2/tagsets/tagset-es/
+                with open("info_spacy.txt","a",encoding="utf-8") as info:
+                    info.write("Func parser inside 2 for parser\n")
+                time.sleep(2)
                 match.append(cont)
+                with open("info_spacy.txt","a",encoding="utf-8") as info:
+                    info.write("Func parser inside 2 for parser after match append cont\n")
+                time.sleep(2)
             cont+=1
+    '''with open("info_spacy.txt","a",encoding="utf-8") as info:
+        info.write("Func parser before sorted(List(Set()))\n")
+    time.sleep(2)'''
     sorted_matches=sorted(list(set(match)))
     return sorted_matches
 

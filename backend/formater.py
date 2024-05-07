@@ -136,9 +136,15 @@ def dividir_lineas_v2(subtitles):#main function
     for subtitle in tqdm(subtitles):
         text = subtitle.content
         text_len=sum(1 for char in text if ord(char) < 128)
+        with open("info_spacy.txt","a",encoding="utf-8") as info:
+                info.write("Before freeling")
+        time.sleep(2)
         matches=freeling.matches_freeling(text)
+        with open("info_spacy.txt","a",encoding="utf-8") as info:
+                info.write("Post freeling")
+        time.sleep(2)
         if text_len >= max_characters+margin:
-            lines,info = split_sentence_v3(text,matches)   
+            lines,info = split_sentence_v3(text,matches)  
             info_file.append(info)
             #lines=divide_oraciones_with_gpt(text, subtitle.end.total_seconds() - subtitle.start.total_seconds())
             

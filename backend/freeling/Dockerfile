@@ -1,4 +1,21 @@
-FROM python:3.8.16-buster AS builder
+#FROM python:3.8.16-buster AS builder
+#FROM python:3.10-slim
+FROM python:3.10-buster
+
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Europe/Madrid
+
+RUN echo "******** Installing dependencies... please wait" && \
+    apt-get update -qq && \
+    apt-get install -qq -y build-essential wget locales cmake \
+                           libicu-dev libboost-regex-dev libboost-system-dev \
+                           libboost-program-options-dev libboost-thread-dev \
+                           libboost-filesystem-dev zlib1g-dev \
+                           swig python3-dev default-jdk && \
+    ( (echo en_US.UTF-8 UTF-8 >> /var/lib/locales/supported.d/en && locale-gen) || \
+      (sed -i 's/^# \(en_US.UTF-8\)/\1/' /etc/locale.gen && locale-gen) || \
+      locale-gen en_US.UTF-8 )
 
 
 ARG DEBIAN_FRONTEND=noninteractive
