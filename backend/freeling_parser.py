@@ -23,19 +23,28 @@ def parser(json_obj,sentence):
     pun_matches_right=   [end for _, _, end in punt_matcher_right(doc)]#signos que  se separan por el lado derecho
     match=[]
     match.extend(pun_matches_left+pun_matches_right)
-    
+    '''with open("info_spacy.txt","a",encoding="utf-8") as info:
+        info.write(f"after match extend\nDATA==== {json.dumps(data, indent=4)}")
+    time.sleep(2)'''
     cont=0
+    #data=data["sentences"]#comentar para debugear
     for a in data:
         for token in a["tokens"]:
-            morfo=token['analysis'][0]['tag']
+            '''with open("info_spacy.txt","a",encoding="utf-8") as info:
+                info.write(f"TOKEN=== {token}\n")
+            time.sleep(2)'''
+
+            morfo=token['analysis'][0]['tag']# descomentar para debugear
+            
+            #morfo=token['tag']
+            '''with open("info_spacy.txt","a",encoding="utf-8") as info:
+                info.write(f"MORFO=== {morfo}\n")
+            time.sleep(2)'''
             if str(morfo).startswith(('C','SP')):#C significa conjuncion y S significa preposicion   https://freeling-user-manual.readthedocs.io/en/v4.2/tagsets/tagset-es/
-                with open("info_spacy.txt","a",encoding="utf-8") as info:
+                '''with open("info_spacy.txt","a",encoding="utf-8") as info:
                     info.write("Func parser inside 2 for parser\n")
-                time.sleep(2)
+                time.sleep(2)'''
                 match.append(cont)
-                with open("info_spacy.txt","a",encoding="utf-8") as info:
-                    info.write("Func parser inside 2 for parser after match append cont\n")
-                time.sleep(2)
             cont+=1
     '''with open("info_spacy.txt","a",encoding="utf-8") as info:
         info.write("Func parser before sorted(List(Set()))\n")
