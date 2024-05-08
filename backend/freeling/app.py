@@ -107,7 +107,7 @@ def Analizador2():
 
 # inicializamos el Analizador Morfológico
 
-docker=True# turn this var false to debug
+docker=False# turn this var false to debug
 
 if(docker):
 

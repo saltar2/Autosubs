@@ -27,16 +27,16 @@ def parser(json_obj,sentence):
         info.write(f"after match extend\nDATA==== {json.dumps(data, indent=4)}")
     time.sleep(2)'''
     cont=0
-    data=data["sentences"]#comentar para debugear
+    #data=data["sentences"]#comentar para debugear
     for a in data:
         for token in a["tokens"]:
             '''with open("info_spacy.txt","a",encoding="utf-8") as info:
                 info.write(f"TOKEN=== {token}\n")
             time.sleep(2)'''
 
-            #morfo=token['analysis'][0]['tag']# descomentar para debugear
+            morfo=token['analysis'][0]['tag']# descomentar para debugear
             
-            morfo=token['tag']
+            #morfo=token['tag']
             '''with open("info_spacy.txt","a",encoding="utf-8") as info:
                 info.write(f"MORFO=== {morfo}\n")
             time.sleep(2)'''

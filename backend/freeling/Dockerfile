@@ -6,6 +6,7 @@ FROM ubuntu:22.04
 
 ARG DEBIAN_FRONTEND=noninteractive
 ENV TZ=Europe/Madrid
+ARG FL_VERSION=4.2.1
 
 RUN echo "******** Installing dependencies... please wait" && \
     apt-get update -qq && \
@@ -19,30 +20,25 @@ RUN echo "******** Installing dependencies... please wait" && \
       locale-gen en_US.UTF-8 )
 
 
-ARG DEBIAN_FRONTEND=noninteractive
-ENV TZ=Europe/Madrid
-
-RUN echo "******** Installing dependencies... please wait" && \
-    apt-get update -qq && \
-    apt-get install -qq -y build-essential wget locales cmake \
-                           libicu-dev libboost-regex-dev libboost-system-dev \
-                           libboost-program-options-dev libboost-thread-dev \
-                           libboost-filesystem-dev zlib1g-dev \
-                           swig python3-dev default-jdk && \
-    ( (echo en_US.UTF-8 UTF-8 >> /var/lib/locales/supported.d/en && locale-gen) || \
-      (sed -i 's/^# \(en_US.UTF-8\)/\1/' /etc/locale.gen && locale-gen) || \
-      locale-gen en_US.UTF-8 )
-
-RUN export FL_VERSION=4.2 && \
-    cd /tmp && \
+#descomentar run para subir a git 
+RUN cd /tmp && \
     echo "******** Downloading FreeLing... please wait" && \
-    wget --progress=dot:giga https://github.com/TALP-UPC/FreeLing/releases/download/$FL_VERSION/FreeLing-src-$FL_VERSION.tar.gz && \
-    wget --progress=dot:giga https://github.com/TALP-UPC/FreeLing/releases/download/$FL_VERSION/FreeLing-langs-src-$FL_VERSION.tar.gz && \
-    echo "******** Uncompressing FreeLing... please wait" && \
-    tar xzf FreeLing-src-$FL_VERSION.tar.gz && \
-    tar xzf FreeLing-langs-src-$FL_VERSION.tar.gz && \
-    rm -rf FreeLing-src-$FL_VERSION.tar.gz FreeLing-langs-src-$FL_VERSION.tar.gz && \
-    cd /tmp/FreeLing-$FL_VERSION && \
+    wget --progress=dot:giga https://github.com/TALP-UPC/FreeLing/archive/refs/tags/${FL_VERSION}.tar.gz && \
+    wget --progress=dot:giga https://github.com/TALP-UPC/FreeLing/releases/download/4.2/FreeLing-langs-src-${FL_VERSION}.tar.gz
+     
+RUN echo "******** Uncompressing FreeLing... please wait" && ls -l /tmp && cd /tmp && \
+    tar xzf ${FL_VERSION}.tar.gz && \
+    tar xzf FreeLing-langs-src-${FL_VERSION}.tar.gz && \
+    rm -rf FreeLing-$FL_VERSION.tar.gz FreeLing-langs-src-$FL_VERSION.tar.gz
+
+#comentar estos 2 copis para subir a git
+
+#COPY ./FreeLing-${FL_VERSION} /tmp
+
+#COPY ./FreeLing-langs-src-${FL_VERSION} /tmp
+ 
+
+RUN cd /tmp/FreeLing-${FL_VERSION} && \
     mkdir build && \
     cd build && \
     echo "******** Compiling FreeLing... please wait" && \
@@ -69,7 +65,7 @@ RUN rm -rf /usr/local/share/freeling/ru && \
 #   etc ....
 #
 RUN cd && \
-    rm -rf /tmp/FreeLing-$FL_VERSION && \
+    rm -rf /tmp/FreeLing-${FL_VERSION} && \
     apt-get --purge -y remove build-essential libicu-dev \
             libboost-regex-dev libboost-system-dev \
             libboost-program-options-dev libboost-thread-dev \
