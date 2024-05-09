@@ -117,12 +117,27 @@ def deepl_tr(subs,language,deepl_target_lang):
                 #result = translator.translate_text(x,source_lang='EN', target_lang=deepl_target_lang)
                 result = translator.translate_text(x, target_lang=deepl_target_lang)
             english_tl = result[0].text.strip().splitlines()
-            assert len(english_tl) == len(n), ("Invalid translation line count ("+ str(len(english_tl))+ " vs "+ str(len(n))+ ")")
+            #assert len(english_tl) == len(n), ("Invalid translation line count ("+ str(len(english_tl))+ " vs "+ str(len(n))+ ")")
+
             #if i != 0:#quitado para que no agrupe y traduzca linea a linea
                 #english_tl = english_tl[3:]
             remove_quotes = dict.fromkeys(map(ord, '"„“‟”＂「」'), None)
+            first_guion=True
             for e in english_tl:
-                    english_lines.append(e.strip().translate(remove_quotes).replace("’", "'"))
+                    aux=e.strip().translate(remove_quotes).replace("’", "'")
+                    english_lines.append(aux)
+                    '''if aux.startswith('-'):
+                        if first_guion:
+                            english_lines.append(aux)
+                            first_guion=False
+                        else:
+                            english_lines[-1]=english_lines[-1]+"\n"+aux
+                    else:
+                        first_guion=True
+                        english_lines.append(aux)'''
+
+
+            
         for i, e in enumerate(english_lines):
             subs[i].content = e
     except Exception as e:

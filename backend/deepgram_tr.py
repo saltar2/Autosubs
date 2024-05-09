@@ -47,7 +47,7 @@ def merge_subs(subs):
         if prop==speaker:
             merged_subs[-1].content=current_sub.content +' ' + sub.content  # Combine content
         else: #diferentes speakers
-            merged_subs[-1].content = "-"+current_sub.content+ ' \n-' + sub.content
+            merged_subs[-1].content = "-"+current_sub.content+ ' -' + sub.content
             merged_subs[-1].proprietary += speaker
         
   return merged_subs
@@ -102,7 +102,7 @@ def deepgram_tr(u, model_size,audio_nombre,language):
                                 if prop==speaker:
                                     subs[-1].content += ' ' + text.strip()
                                 else: #diferentes speakers
-                                    subs[-1].content = "-"+subs[-1].content+ ' \n-' + text.strip()
+                                    subs[-1].content = "-"+subs[-1].content+ ' -' + text.strip()
                                     subs[-1].proprietary += speaker
                                 subs[-1].end = datetime.timedelta(seconds=end)
                                     
