@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, send_file,jsonify,abort,Response
-import os, requests,time,threading
+import os, requests,time,threading,datetime
 from multiprocessing import Queue
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import HTTPException
@@ -10,9 +10,9 @@ import zipfile
 app = Flask(__name__)
 
 #docker url
-url_base='http://backend:5001'
+#url_base='http://backend:5001'
 #local url
-#url_base='http://localhost:5001'
+url_base='http://localhost:5001'
 # Configuración de la subida de archivos
 
 UPLOAD_FOLDER = 'uploads'
@@ -68,7 +68,7 @@ def index():
 
 @app.route('/upload', methods=['POST'])
 def upload_files():
-    
+    start=time.time()
     uploaded_files = request.files.getlist('file')
     lan = request.form.get('language')
 
@@ -80,7 +80,9 @@ def upload_files():
  
         # Generar la URL de descarga
     zip_url = url_for('download_zip', filename=zip_filename)
-
+    end=time.time()
+    tot=(end-start)/60
+    print(f"Tiempo total: {str(tot)}")
         # Retornar la URL de descarga
     return zip_url
 
@@ -115,14 +117,16 @@ def send_to_backend(filepath, filename, lan, mimetype):
     
     try:
         response = requests.post(backend_url, data=data, files=files)
+        if not response.ok:
+            error_menssage=response.text    
         response.raise_for_status()  # Lanza una excepción si el código de estado de la respuesta no es 2xx
         
         return response.json()
-    except requests.exceptions.RequestException :
+    except requests.exceptions.RequestException as e:
         # Error de conexión , tiempo de espera, problemas con apis etc
-        abort(503)
-    except Exception :
-        abort(500)
+        abort(503,error_menssage)
+    except Exception as e :
+        abort(500,error_menssage)
 
 def generate_zip(uploaded_files, subs):
     zip_filename = 'subtitles.zip'
@@ -152,6 +156,7 @@ def sse_endpoint():
     global sse_connection_with_backend
     if sse_connection_with_backend is None:
         get_sse_endpoint_backend()
+    event_queue.put('start')
     def generate_event():
         while True:
             event=event_queue.get()
@@ -167,7 +172,7 @@ def get_sse_endpoint_backend():
         for event in sse_connection_with_backend:
             global processing_progress
             data=event.decode('utf-8')
-            if(data != ''):
+            if(data != '' and not data.__contains__('start')):
                 processing_progress+=1
                 print(data)
                 event_queue.put(str(data))

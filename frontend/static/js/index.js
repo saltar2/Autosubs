@@ -1,7 +1,7 @@
 var scrollTimeout;
 var autoScrollEnabled = true;
 var languagesLoaded = false;
-var eventSource;
+var eventSource= null;
 //var eventCondition = false;
 
 function scrollToBottom() {
@@ -65,7 +65,10 @@ function toggleMessageBox() {
 }
 
 function receiveSSE() {
-    eventSource = new EventSource('/event'); // Ruta del endpoint SSE en tu servidor Flask
+    if (eventSource == null){
+        eventSource = new EventSource('/event'); // Ruta del endpoint SSE en tu servidor Flask
+    }
+    
     eventSource.onopen = function() {
         console.log('Conexión SSE establecida');
         //var messageBox = document.getElementById('messages');
@@ -78,13 +81,16 @@ function receiveSSE() {
     };
     eventSource.addEventListener("message", function(event) {
         console.log('Evento SSE recibido del servidor:', event.data);
-        updateProgress();
-        // Actualiza el contenido del cuadro de mensajes en la interfaz web
-        var messageBox = document.getElementById('messages');
-        messageBox.innerHTML += event.data + '<br>';
-        if (autoScrollEnabled) {
-            scrollToBottom();
+        if(event.data != 'start'){
+            updateProgress();
+            // Actualiza el contenido del cuadro de mensajes en la interfaz web
+            var messageBox = document.getElementById('messages');
+            messageBox.innerHTML += event.data + '<br>';
+            if (autoScrollEnabled) {
+                scrollToBottom();
         }
+        }
+        
     });
 }
 function load_languages(){
@@ -113,7 +119,7 @@ function load_languages(){
 // Cuando se envía el formulario
 $('#uploadForm').submit(function(event) {
     event.preventDefault();
-
+    updateProgressBar(0)
     // Desactivar el botón de submit
     $('#submitButton').prop('disabled', true);
 
@@ -123,7 +129,9 @@ $('#uploadForm').submit(function(event) {
 
     var messageBox = document.getElementById('messages');
     messageBox.innerHTML = '';
-    
+    if (eventSource == null){
+        receiveSSE();
+    }
     
     $.ajax({
         type: 'POST',
@@ -180,12 +188,12 @@ $(document).ready(function() {
     if ($('#languageSelect option').length > 1) {// si recargas la pagina las variables se restablecen
         // Si ya están cargados, no se hace nada
         languagesLoaded = true;
-        return;
     }else{
         load_languages();
+        receiveSSE();
     }
     
-    receiveSSE();
+    
     // Evento para detectar cuando se selecciona un idioma por primera vez
     $('#languageSelect').on('click', function() {
         // Verificar si los idiomas ya se han cargado
@@ -193,12 +201,13 @@ $(document).ready(function() {
         if ($('#languageSelect option').length > 1) {// si recargas la pagina las variables se restablecen
             // Si ya están cargados, no se hace nada
             languagesLoaded = true;
-            return;
         }
         if (!languagesLoaded /*&& $('#languageSelect option').length ==0*/) {
             // Realizar la llamada a la API del backend para obtener los idiomas
             load_languages();
         }
+        
+
     });
 
 });
