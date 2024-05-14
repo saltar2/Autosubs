@@ -69,6 +69,7 @@ def process_video():
     lan = request.form.get('language')
     video_file= request.files['file']
     
+    
     try :
         subs=principal(video_file, lan)
     except exceptions.CustomError as e:
@@ -84,6 +85,7 @@ def process_video():
 
 @backend_app.route('/event')
 def sse_endpoint():
+    event_queue.put('start')
     def generate_event():
         while True:
             event=event_queue.get()
@@ -96,12 +98,12 @@ def sse_endpoint():
 @backend_app.errorhandler(500)
 def handle_general_error(e):
     backend_app.logger.error(e)
-    return jsonify(error=str(e)),500
+    return str(e.description),500
 
 @backend_app.errorhandler(503)
 def handle_specific_error(e):
     backend_app.logger.error(e)
-    return jsonify(error=str(e)),503
+    return str(e.description),503
 
 @backend_app.route('/healthcheck')
 def healthcheck():
