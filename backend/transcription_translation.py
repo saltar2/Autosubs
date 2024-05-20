@@ -11,7 +11,7 @@ def main(audio_path,language,queue_event):#version para no web
     transcription=True
     transcription_mode=2 # mode 2 deepgram 
 
-    translation=True
+    translation=False
 
     denoise=True
     denoise_ant=False# false indica que no se hace denoise antes de trocear el audio sino despues, true indica lo contrario

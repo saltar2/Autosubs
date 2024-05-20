@@ -30,7 +30,7 @@ os.makedirs(app.config['DOWNLOAD_FOLDER'], exist_ok=True)
 
 processing_progress=0
 num_files=0
-num_ses_messages=5
+num_ses_messages=6
 language_codes={}
 sse_connection_with_backend=None
 event_queue = Queue()
@@ -71,12 +71,12 @@ def upload_files():
     start=time.time()
     uploaded_files = request.files.getlist('file')
     lan = request.form.get('language')
-
+    augmented_by_llm=False
         # Guardar archivos y obtener los subtítulos procesados
-    subs = process_files(uploaded_files, lan)
+    subs,text_correction = process_files(uploaded_files, lan,augmented_by_llm)
 
         # Generar archivo ZIP con los subtítulos
-    zip_filename = generate_zip(uploaded_files, subs)
+    zip_filename = generate_zip(uploaded_files, subs ,text_correction)
  
         # Generar la URL de descarga
     zip_url = url_for('download_zip', filename=zip_filename)
@@ -86,8 +86,9 @@ def upload_files():
         # Retornar la URL de descarga
     return zip_url
 
-def process_files(uploaded_files, lan):
+def process_files(uploaded_files, lan,augmented_by_llm:bool):
     subs = []
+    texts = []
     
     global processing_progress
     processing_progress=0
@@ -102,18 +103,21 @@ def process_files(uploaded_files, lan):
             file.save(filepath)
             try:
             # Enviar archivo al backend y obtener subtítulo
-                subtitle = send_to_backend(filepath, filename, lan,file.mimetype)
+                res = send_to_backend(filepath, filename, lan,file.mimetype,augmented_by_llm)
+                subtitle=res['subs']
+                text_correction=res['text_correction']
             finally:
                 os.remove(filepath)
             subs.append(subtitle)
+            texts.append(text_correction)
             #cont+=1
             #processing_progress=round((cont/long)*100,1)
-    return subs
+    return subs,texts
 
-def send_to_backend(filepath, filename, lan, mimetype):
+def send_to_backend(filepath, filename, lan, mimetype,augmented_by_llm:bool):
     backend_url = url_base + '/process_video'
     files = {'file': (filename, open(filepath, 'rb').read(), mimetype)}
-    data = {'language': lan}
+    data = {'language': lan,'augmented llm':augmented_by_llm}
     
     try:
         response = requests.post(backend_url, data=data, files=files)
@@ -128,14 +132,17 @@ def send_to_backend(filepath, filename, lan, mimetype):
     except Exception as e :
         abort(500,error_menssage)
 
-def generate_zip(uploaded_files, subs):
+def generate_zip(uploaded_files, subs,text_corrected):
     zip_filename = 'subtitles.zip'
     extension = ".es.srt"
+    extension2= ".txt"
     with zipfile.ZipFile(os.path.join(app.config['DOWNLOAD_FOLDER'], zip_filename), 'w') as zipf:
         for i, subtitle in enumerate(subs, start=1):
             video_name = os.path.splitext(uploaded_files[i - 1].filename)[0]
             subtitle_filename = f'{video_name}{extension}'
+            text_filename= f'{video_name}{extension2}'
             zipf.writestr(subtitle_filename, subtitle)
+            zipf.writestr(text_filename,text_corrected[i-1])
     return zip_filename
 
                                
