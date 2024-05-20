@@ -1,17 +1,22 @@
-import os,deepl_tr as deepl_tr,deepgram_tr as deepgram_tr,silero as silero,formater as formater,srt,denoiser as denoiser,concurrent.futures,time,exceptions
+import os,deepl_tr as deepl_tr,deepgram_tr as deepgram_tr,silero as silero,formater as formater,srt,denoiser as denoiser,concurrent.futures,time,whisper_cpp as whisper_tr
+import exceptions,llm_detector as llmdct
 from tqdm import tqdm
 
 def process_frag(i,aud_name):
-    with open(f"vad_chunks/{aud_name}.wav", "rb") as f:
+    name=f"vad_chunks/{aud_name}.wav"
+    with open(name, "rb") as f:
         #"vad_chunks/{aud_name}_d.wav"
-        denoiser.denoise(f,i,f)
+        denoiser.denoise(f,i,name)
 
-def main(audio_path,language,queue_event):#version para no web
-
+def main(audio_path,language,queue_event,llm_crt:bool):#version para no web
+    #raise Exception('Error custom')
     transcription=True
-    transcription_mode=2 # mode 2 deepgram 
+    transcription_mode=2 # mode 2 deepgram #mode 1 whisper.ccp
 
-    translation=True
+    llm_detection_hallucinations=True
+    llm_correction=llm_crt
+
+    translation=False
 
     denoise=True
     denoise_ant=False# false indica que no se hace denoise antes de trocear el audio sino despues, true indica lo contrario
@@ -20,6 +25,7 @@ def main(audio_path,language,queue_event):#version para no web
     ####deepgram models
     # si usas otro modelo mira max workers en deepgram_tr.py
     model_size="nova-2"
+    model2='whisper-large'
     #model_size="base"
     #model_size="enhaced"
 
@@ -27,7 +33,7 @@ def main(audio_path,language,queue_event):#version para no web
     #model_size="whisper-large"
 
     # @markdown Advanced settings:
-    vad_threshold = 0.24  # @param {type:"number"} umbral de decision si hay audio de 0 a 1
+    vad_threshold = 0.27  # @param {type:"number"} umbral de decision si hay audio de 0 a 1
     chunk_threshold = 0.1  # @param {type:"number"} maxima longitud de silencio entre fragmentos de audio
     deepl_target_lang = "ES"  
     max_attempts = 3  
@@ -67,20 +73,42 @@ def main(audio_path,language,queue_event):#version para no web
                 queue_event.put('Transcribiendo audio ...')
                 time.sleep(1)
                 
-                subs=deepgram_tr.deepgram_tr(u,model_size,audio_nombre,language)
+                '''subs=deepgram_tr.deepgram_tr(u,model_size,audio_nombre,language)#nova model
+                    final_subs=subs
+                    #model_size=".deepgram_"+model_size
+                    model2='whisper-large'
+                    other_subs=deepgram_tr.deepgram_tr(u,model2,audio_nombre,language)#whisper model
+                    #final_subs=other_subs'''
+                with concurrent.futures.ProcessPoolExecutor(max_workers=2) as executor:
+                    future_whisper = executor.submit(deepgram_tr.deepgram_tr, u, model2, audio_nombre, language)
+                    future_nova = executor.submit(deepgram_tr.deepgram_tr, u, model_size, audio_nombre, language)
+                    
+                        
+                    subs = future_nova.result()
+                    other_subs = future_whisper.result()
+                    final_subs=subs
+
+                '''out_path_pre=out_path_pre+"."+language+"."+model_size+ "_transcription.srt"
+                with open(out_path_pre, "w", encoding="utf8") as f:
+                    f.write(srt.compose(other_subs))'''
+
+
+                if llm_detection_hallucinations:
+                    queue_event.put('Revisando transcripcion ...')
+                    text_correction=llmdct.revisar_sub(subs,language,other_subs)
+                    if llm_correction:
+                        subs_revised=llmdct.correct_subs(subs,text_correction)
+                        final_subs=subs_revised
+
+                subs_before_translation= subs_revised if llm_correction else subs
+            '''elif transcription_mode==1:
+                subs=whisper_tr.transcribe_whisper_cpp(u,audio_nombre)
                 final_subs=subs
-                #model_size=".deepgram_"+model_size
-
-                #lan2=deepl_tr.translate_language_name(language)
-                #out_path_pre=out_path_pre+"."+lan2+model_size+ "_transcription.srt"
-                #with open(out_path_pre, "w", encoding="utf8") as f:
-                #    f.write(srt.compose(subs))
-                #print("(Untranslated subs saved to", out_path_pre, ")")
-
+                raise exceptions.CustomError('Not implemented yet')'''
             if(translation):
                 queue_event.put('Traduciendo subtitulos ...')
                 
-                mid_subs=deepl_tr.deepl_tr(subs,language,deepl_target_lang)
+                mid_subs=deepl_tr.deepl_tr(subs_before_translation,language,deepl_target_lang)
                 final_subs=mid_subs
                 if(better_formating):
                     #out_path_formated=out_path_deepl.split(".srt")[0]
@@ -102,7 +130,7 @@ def main(audio_path,language,queue_event):#version para no web
                         os.unlink(file_path)
                 except Exception as e:
                     print(f"No se pudo eliminar {file_path}: {e}")
-        return final_subs
+        return final_subs,text_correction
 
 if __name__ == '__main__':
     main()

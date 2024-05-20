@@ -31,7 +31,7 @@ language_codes = {
 }
 
 
-def principal(video_file,lan):#funcion para web
+def principal(video_file,lan,augmented_by_llm:bool):#funcion para web
    
     video_filename = os.path.join(backend_app.config['TEMP'], secure_filename(video_file.filename))
     video_file.save(video_filename)
@@ -40,7 +40,8 @@ def principal(video_file,lan):#funcion para web
     try:
         audio_path=extract_audio.extract_audio_ffmpeg(os.path.join(backend_app.config['TEMP']),lan)
         
-        sub=trtr.main(audio_path,lan,event_queue)
+        sub,text_correction=trtr.main(audio_path,lan,event_queue,augmented_by_llm)
+        
     except exceptions.CustomError:
          raise 
     except Exception:
@@ -48,7 +49,7 @@ def principal(video_file,lan):#funcion para web
 
     os.remove(audio_path)
     os.remove(video_filename)
-    return sub
+    return sub,text_correction
 
 backend_app = Flask(__name__)
 backend_app.config['MAX_CONTENT_LENGTH'] = 2048 * 1024 * 1024#permitimos 2 GB
@@ -67,20 +68,24 @@ def get_language_codes():
 def process_video():
         # Obtiene los datos del formulario enviado por el frontend
     lan = request.form.get('language')
+    augmented_by_llm=True if "true" == request.form.get('augmented llm').lower() else False #llega como string aunque lo he mandado como bool
     video_file= request.files['file']
     
     
     try :
-        subs=principal(video_file, lan)
+        subs,text_correction=principal(video_file, lan,augmented_by_llm)
     except exceptions.CustomError as e:
          abort(503,e)#service unavailable
     except Exception as e:
          abort(500,e)#unexpected error
 
     result=srt.compose(subs)
-
+    response_data = {
+        'subs': result,
+        'text_correction': text_correction
+    }
     # Devuelve el resultado al frontend
-    return jsonify(result)
+    return jsonify(response_data)
 
 
 @backend_app.route('/event')

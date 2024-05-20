@@ -17,3 +17,5 @@ backend/FreeLing/
 
 backend/error.log
 backend/FreeLing
+backend/whisper_cpp.py
+backend/FreeLing

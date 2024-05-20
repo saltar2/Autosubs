@@ -60,7 +60,7 @@ def deepgram_tr(u, model_size,audio_nombre,language):
     sub_index = 1
     #segment_info = []
     
-    print("Running Deepgram")
+    print(f"Running Deepgram {model_size}")
     #output = "deepgram_transcription_"+model_size+".json" #json donde se puede ver las transcripciones
     output2= "deepgram_transcription_"+model_size+"_complete.json" 
     #if(os.path.exists(output)):#borramos el archivo de la ejecucion anterior
@@ -69,7 +69,8 @@ def deepgram_tr(u, model_size,audio_nombre,language):
         os.remove(output2)
     #all_results = {}#debug file
     all_results_completed={}
-    with concurrent.futures.ThreadPoolExecutor(max_workers=14) as executor:#para cambiar numero de workers mira esto -> https://developers.deepgram.com/docs/getting-started-with-pre-recorded-audio#rate-limits
+    workers=4 if str(model_size).__contains__('whisper') else 18
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:#para cambiar numero de workers mira esto -> https://developers.deepgram.com/docs/getting-started-with-pre-recorded-audio#rate-limits
         futures = [executor.submit(process_chunk,i, f"{audio_nombre}_{i}", dg_client, model_size,language) for i in range(len(u))]
         
         for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures)):
@@ -79,7 +80,11 @@ def deepgram_tr(u, model_size,audio_nombre,language):
         sorted_results= dict(sorted(all_results_completed.items(), key=lambda item: int(item[0])))
 
         for c in tqdm(sorted_results,total=len(sorted_results)):#c tiene el numero del chunk index
-            chunk_results=sorted_results[c]["results"]["channels"][0]["alternatives"][0]
+            sub_res=sorted_results[c]["results"]["channels"][0]["alternatives"]#para el modelo de whisper si no hay transcripcion no existe una lista vacia pero para los modelos de deepgram si devuelve 
+            if len(sub_res)>0:
+                chunk_results=sorted_results[c]["results"]["channels"][0]["alternatives"][0]
+            else:
+                continue
             
             if chunk_results['transcript']!='':
                 chunk=chunk_results["paragraphs"]["paragraphs"]
@@ -110,35 +115,60 @@ def deepgram_tr(u, model_size,audio_nombre,language):
                             # Si no se puede combinar con el subtítulo anterior, se agrega el subtítulo actual como uno nuevo
                             # De esta forma puede aun solaparse con futuros subtitulos que aun esten por venir pero nunca con los anteriores
                             # Mas adelante se hara un merge si alguno se solapa
-                                ant_end=subs[-1].end.total_seconds()
+                                if subs:
+                                    ant_end=subs[-1].end.total_seconds()
 
-                                diff_with_ant = start-ant_end
-                                # diff_with_next=end-next
-                                total = end-start
-                                fin = True
-                                margin = 0.05
+                                    diff_with_ant = start-ant_end
+                                    # diff_with_next=end-next
+                                    total = end-start
+                                    fin = True
+                                    margin = 0.05
 
-                                while fin:
-                                    if diff_with_ant > margin:
-                                        start -= margin
-                                        diff_with_ant = start-ant_end
+                                    while fin:
+                                        if diff_with_ant > margin:
+                                            start -= margin
+                                            diff_with_ant = start-ant_end
+                                            total = end-start
+                                            if total > 1:
+                                                fin = False
+
+                                        end += margin
+
                                         total = end-start
                                         if total > 1:
                                             fin = False
 
-                                    end += margin
-
+                                    subs.append(srt.Subtitle(
+                                        index=sub_index,
+                                        start=datetime.timedelta(seconds=start),
+                                        end=datetime.timedelta(seconds=end),
+                                        content=text.strip(),proprietary=speaker)
+                                        )
+                                    sub_index += 1
+                                else:#caso primer subtitulo
                                     total = end-start
-                                    if total > 1:
-                                        fin = False
+                                    fin = True
+                                    margin = 0.05
 
-                                subs.append(srt.Subtitle(
-                                    index=sub_index,
-                                    start=datetime.timedelta(seconds=start),
-                                    end=datetime.timedelta(seconds=end),
-                                    content=text.strip(),proprietary=speaker)
-                                    )
-                                sub_index += 1
+                                    while fin:
+                                        if start-margin >= 0:
+                                            start -= margin
+                                            total = end-start
+                                            if total > 1:
+                                                fin = False
+
+                                        end += margin
+
+                                        total = end-start
+                                        if total > 1:
+                                            fin = False
+                                    subs.append(srt.Subtitle(
+                                        index=sub_index,
+                                        start=datetime.timedelta(seconds=start),
+                                        end=datetime.timedelta(seconds=end),
+                                        content=text.strip(),proprietary=speaker)
+                                        )
+                                    sub_index += 1
                         else:
                             # Si la duración del subtítulo es mayor o igual a 1 segundo, agrégalo como un nuevo subtítulo
                             subs.append(srt.Subtitle(

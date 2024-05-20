@@ -97,9 +97,7 @@ def denoise(input,i,output):
                                 for frame in denoised_frames])
     os.remove(TEMP_FILE)
 
-    wavfile.write(output,
-                TARGET_SR,
-                denoised_wav)
+    wavfile.write(output,TARGET_SR, denoised_wav)
 
 
 #https://github.com/xiph/rnnoise/issues/69#issuecomment-498477189
