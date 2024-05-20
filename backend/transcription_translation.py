@@ -1,4 +1,4 @@
-import os,deepl_tr as deepl_tr,deepgram_tr as deepgram_tr,silero as silero,formater as formater,srt,denoiser as denoiser,concurrent.futures,time,whisper_cpp as whisper_tr
+import os,deepl_tr as deepl_tr,deepgram_tr as deepgram_tr,silero as silero,formater as formater,srt,denoiser as denoiser,concurrent.futures,time#,whisper_cpp as whisper_tr
 import exceptions,llm_detector as llmdct
 from tqdm import tqdm
 
