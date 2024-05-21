@@ -72,10 +72,11 @@ def convert_audio_to_wav(input_dir):
 
   # List video files
   audio_file = [f for f in os.listdir(input_dir) if f.lower().endswith(tuple(audio_extensions))]
-
-  output_audio_path = os.path.join(input_dir, f"{os.path.splitext(audio_file)[0]}.wav")
-  subprocess.run(["ffmpeg", "-i", audio_file, "-acodec", "pcm_s16le", "-ar", "44100", "-ac", "2","-y", output_audio_path])
-  os.remove(audio_file)
+  aud_file=audio_file[0]
+  base_audio=os.path.join(input_dir,aud_file)
+  output_audio_path = os.path.join(input_dir, f"{os.path.splitext(aud_file)[0]}.wav")
+  subprocess.run(["ffmpeg", "-i", base_audio, "-acodec", "pcm_s16le", "-ar", "44100", "-ac", "2","-y", output_audio_path])
+  os.remove(base_audio)
 
 #comando para extraer audio de un video desde linea de comandos con ffmpeg.
 ''' ffmpeg -i '.\Avalanches_ Unpredictable, Inevitable, Fatal _ Deadly Disasters _ Free Documentary (192kbit_AAC).mkv'
