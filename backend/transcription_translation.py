@@ -79,15 +79,18 @@ def main(audio_path,language,queue_event,llm_crt:bool):#version para no web
                     model2='whisper-large'
                     other_subs=deepgram_tr.deepgram_tr(u,model2,audio_nombre,language)#whisper model
                     #final_subs=other_subs'''
-                with concurrent.futures.ProcessPoolExecutor(max_workers=2) as executor:
-                    future_whisper = executor.submit(deepgram_tr.deepgram_tr, u, model2, audio_nombre, language)
-                    future_nova = executor.submit(deepgram_tr.deepgram_tr, u, model_size, audio_nombre, language)
-                    
+                if llm_detection_hallucinations:
+                    with concurrent.futures.ProcessPoolExecutor(max_workers=2) as executor:
+                        future_whisper = executor.submit(deepgram_tr.deepgram_tr, u, model2, audio_nombre, language)
+                        future_nova = executor.submit(deepgram_tr.deepgram_tr, u, model_size, audio_nombre, language)
                         
-                    subs = future_nova.result()
-                    other_subs = future_whisper.result()
+                            
+                        subs = future_nova.result()
+                        other_subs = future_whisper.result()
+                        final_subs=subs
+                else:
+                    subs=deepgram_tr.deepgram_tr(u,model_size,audio_nombre,language)
                     final_subs=subs
-
                 '''out_path_pre=out_path_pre+"."+language+"."+model_size+ "_transcription.srt"
                 with open(out_path_pre, "w", encoding="utf8") as f:
                     f.write(srt.compose(other_subs))'''
