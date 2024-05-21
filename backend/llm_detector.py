@@ -76,6 +76,7 @@ def correct_subs(sub,text):
     subtitle1=srt.compose(sub)
 
     prompt=f"As an analist you are tasked to perform all the corrections for a given SRT file and a given list of errors with explanation and the alternative solution. \
+            You are only able to modify the especify errors on the provided text. \
             When you perform the indicated changes on the SRT file to correct it, please take these considerations into account:\
                 1. A subtitle must last a minimum of 1 second and a maximum of 8 seconds. \
                 2. The maximum lines that can be shown together on screen are 2 \

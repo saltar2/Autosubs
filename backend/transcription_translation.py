@@ -13,7 +13,7 @@ def main(audio_path,language,queue_event,llm_crt:bool):#version para no web
     transcription=True
     transcription_mode=2 # mode 2 deepgram #mode 1 whisper.ccp
 
-    llm_detection_hallucinations=True
+    llm_detection_hallucinations=False
     llm_correction=llm_crt
 
     translation=False

@@ -38,7 +38,10 @@ def principal(video_file,lan,augmented_by_llm:bool):#funcion para web
     time.sleep(2)
     event_queue.put('Procesando video: {}'.format(video_file.filename))
     try:
-        audio_path=extract_audio.extract_audio_ffmpeg(os.path.join(backend_app.config['TEMP']),lan)
+        if video_filename.__contains__("aac", "mp3", "flac"): #es un audio
+            audio_path=extract_audio.convert_audio_to_wav(os.path.join(backend_app.config['TEMP']))
+        else:#es un video
+            audio_path=extract_audio.extract_audio_ffmpeg(os.path.join(backend_app.config['TEMP']),lan)
         
         sub,text_correction=trtr.main(audio_path,lan,event_queue,augmented_by_llm)
         

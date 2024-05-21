@@ -10,15 +10,15 @@ import zipfile
 app = Flask(__name__)
 
 #docker url
-#url_base='http://backend:5001'
+url_base='http://backend:5001'
 #local url
-url_base='http://localhost:5001'
+#url_base='http://localhost:5001'
 # Configuración de la subida de archivos
 
 UPLOAD_FOLDER = 'uploads'
 DOWNLOAD_FOLDER = 'downloads'
 
-ALLOWED_EXTENSIONS = {'mp4', 'avi', 'mkv', 'mov', 'm4v', 'mts', 'wmv', 'mpg', 'flv'}
+ALLOWED_EXTENSIONS = {'mp4', 'avi', 'mkv', 'mov', 'm4v', 'mts', 'wmv', 'mpg', 'flv','mp3','flac','aac'}
 
 app.config['MAX_CONTENT_LENGTH'] = 2048 * 1024 * 1024  # Permitimos hasta 2 GB
 
