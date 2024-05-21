@@ -131,7 +131,7 @@ def main(audio_path,language,queue_event,llm_crt:bool):#version para no web
                 except Exception as e:
                     print(f"No se pudo eliminar {file_path}: {e}")
         
-        return final_subs,text_correction if llm_detection_hallucinations else final_subs,None
+        return final_subs,text_correction if llm_detection_hallucinations else None
 
 if __name__ == '__main__':
     main()

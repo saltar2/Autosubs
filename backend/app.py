@@ -51,7 +51,8 @@ def principal(video_file,lan,augmented_by_llm:bool):#funcion para web
          raise 
 
     os.remove(audio_path)
-    os.remove(video_filename)
+    if not any(ext in video_filename for ext in ["aac", "mp3", "flac"]): #es un video
+        os.remove(video_filename)
     return sub,text_correction
 
 backend_app = Flask(__name__)
