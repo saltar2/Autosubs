@@ -30,7 +30,7 @@ os.makedirs(app.config['DOWNLOAD_FOLDER'], exist_ok=True)
 
 processing_progress=0
 num_files=0
-num_ses_messages=6
+num_ses_messages=3
 language_codes={}
 sse_connection_with_backend=None
 event_queue = Queue()
@@ -106,6 +106,7 @@ def process_files(uploaded_files, lan,augmented_by_llm:bool):
                 res = send_to_backend(filepath, filename, lan,file.mimetype,augmented_by_llm)
                 subtitle=res['subs']
                 text_correction=res['text_correction']
+                
             finally:
                 os.remove(filepath)
             subs.append(subtitle)
@@ -139,10 +140,14 @@ def generate_zip(uploaded_files, subs,text_corrected):
     with zipfile.ZipFile(os.path.join(app.config['DOWNLOAD_FOLDER'], zip_filename), 'w') as zipf:
         for i, subtitle in enumerate(subs, start=1):
             video_name = os.path.splitext(uploaded_files[i - 1].filename)[0]
+
             subtitle_filename = f'{video_name}{extension}'
-            text_filename= f'{video_name}{extension2}'
             zipf.writestr(subtitle_filename, subtitle)
-            zipf.writestr(text_filename,text_corrected[i-1])
+
+            if text_corrected[i-1] is not None:
+                text_filename= f'{video_name}{extension2}'
+                zipf.writestr(text_filename,text_corrected[i-1])
+
     return zip_filename
 
                                
