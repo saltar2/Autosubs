@@ -10,9 +10,9 @@ import zipfile
 app = Flask(__name__)
 
 #docker url
-#url_base='http://backend:5001'
+url_base='http://backend:5001'
 #local url
-url_base='http://localhost:5001'
+#url_base='http://localhost:5001'
 # Configuración de la subida de archivos
 
 UPLOAD_FOLDER = 'uploads'
@@ -71,7 +71,7 @@ def upload_files():
     start=time.time()
     uploaded_files = request.files.getlist('file')
     lan = request.form.get('language')
-    augmented_by_llm=False
+    augmented_by_llm=True if request.form.get('llm_option') == 'yes' else False
         # Guardar archivos y obtener los subtítulos procesados
     subs,text_correction = process_files(uploaded_files, lan,augmented_by_llm)
 
@@ -84,7 +84,7 @@ def upload_files():
     tot=(end-start)/60
     print(f"Tiempo total: {str(tot)}")
         # Retornar la URL de descarga
-    return zip_url
+    return jsonify({"zip_url":zip_url,"total_time":tot})
 
 def process_files(uploaded_files, lan,augmented_by_llm:bool):
     subs = []

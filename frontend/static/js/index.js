@@ -2,6 +2,7 @@ var scrollTimeout;
 var autoScrollEnabled = true;
 var languagesLoaded = false;
 var eventSource= null;
+var isDarkMode = false;
 //var eventCondition = false;
 
 function scrollToBottom() {
@@ -43,9 +44,9 @@ function updateProgress() {
 
                 } else {
                     // Cuando el progreso alcanza el 100%, oculta la barra de progreso
-                    $('#progressBar').addClass('is-hidden');
-                    $('#progressText').addClass('is-hidden');
-                    updateProgressBar(0)
+                    //$('#progressBar').addClass('is-hidden');
+                    //$('#progressText').addClass('is-hidden');
+                    //updateProgressBar(0)
                 }
             }
         },
@@ -116,6 +117,43 @@ function load_languages(){
         }
     });
 }
+function toggleBackground() {
+    var body = $('body');
+    var textElements = $('body, h1, h2, h3, h4, h5, h6, p, label, input, select, option');
+    var sse_mesages = $('#messages');
+    var detailedInfoBox = $('#messageBox');
+    var uploadForm = $('#uploadForm');
+    var fileinput= $('#fileInput');
+    var langselect=$('#languageSelect');
+    var footer= $('footer');
+    var nav=$('navbar');
+
+    if (isDarkMode) {
+        // Cambiar a modo claro
+        body.css('background-color', '#fff');
+        textElements.css('color', '#333');
+        sse_mesages.css('color', '#333');
+        detailedInfoBox.css('background-color', '#fff'); // Cambiar el color de fondo de "informacion detallada"
+        uploadForm.css('background-color', '#fff'); // Cambiar el color de fondo del formulario de carga
+        fileinput.css('background-color', '#fff');
+        langselect.css('background-color', '#fff');
+        footer.css('background-color', '#fff');
+        nav.css('background-color', '#d5cbec');
+        isDarkMode = false;
+    } else {
+        // Cambiar a modo oscuro
+        body.css('background-color', '#333');
+        textElements.css('color', '#fff');
+        sse_mesages.css('color', '#fff');
+        detailedInfoBox.css('background-color', '#333'); // Cambiar el color de fondo de "informacion detallada"
+        uploadForm.css('background-color', '#333'); // Cambiar el color de fondo del formulario de carga
+        fileinput.css('background-color', '#333');
+        langselect.css('background-color', '#333');
+        footer.css('background-color', '#333');
+        nav.css('background-color', '#00d1b2');
+        isDarkMode = true;
+    }
+}
 // Cuando se envía el formulario
 $('#uploadForm').submit(function(event) {
     event.preventDefault();
@@ -126,6 +164,9 @@ $('#uploadForm').submit(function(event) {
     var formData = new FormData($(this)[0]);
     $('#progressBar').removeClass('is-hidden');
     $('#progressText').removeClass('is-hidden');
+    $("#progressText_time_final").addClass('is-hidden');
+    $('#h2_name').addClass('is-hidden');
+    $('#downloadLink').addClass('is-hidden');
 
     var messageBox = document.getElementById('messages');
     messageBox.innerHTML = '';
@@ -146,11 +187,15 @@ $('#uploadForm').submit(function(event) {
             
             $('#progressBar').addClass('is-hidden');
             $('#progressText').addClass('is-hidden');
+
+            updateProgressBar(0);
             $('.counter').hide();
+            $("#progressText_time_final").removeClass("is-hidden"); // Mostrar el elemento
+            $("#totalTime").text(response.total_time.toFixed(2)); // Actualizar el tiempo total
 
             // Mostrar el botón de descarga del ZIP
             $('#h2_name').removeClass('is-hidden');
-            $('#downloadLink').removeClass('is-hidden').attr('href', response);
+            $('#downloadLink').removeClass('is-hidden').attr('href', response.zip_url);
             // activar el botón de submit
             $('#submitButton').prop('disabled', false);
             // Detener la llamada a la función updateProgress
@@ -208,6 +253,9 @@ $(document).ready(function() {
         }
         
 
+    });
+    $('#toggleBackgroundButton').click(function() {
+        toggleBackground();
     });
 
 });

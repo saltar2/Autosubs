@@ -5,7 +5,10 @@ body {
     padding: 0;
     background-color: #f0f0f0;
 }
+p   {
+    color:#333
 
+}
 .container {
     max-width: 800px;
     margin: 0 auto;
@@ -110,6 +113,15 @@ span.progress {
     overflow-y: auto; /* Aparecerá una barra de desplazamiento vertical cuando sea necesario */
 }
 
+#progressText_time_final {
+    margin-top: 10px; /* Espacio entre el texto de progreso y el tiempo total */
+}
+
+#totalTime {
+    font-size: 22px; /* Tamaño del texto */
+    font-weight: bold; /* Negrita */
+ /* Color del texto */
+}
 
 
 

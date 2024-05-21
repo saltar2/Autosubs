@@ -17,6 +17,11 @@
             <a class="navbar-item" href="/">
                 <strong>Home</strong>
             </a>
+            <a class="navbar-item"id="toggleBackgroundButton" >
+                <strong>Cambiar fondo</strong>
+            </a>
+            <!--<button id="toggleBackgroundButton" class="button is-primary">Cambiar fondo</button>-->
+
         </div>
     </nav>
     <section class="section">
@@ -45,10 +50,22 @@
                     </div>
                 </div>
                 <div class="field">
+                    Usar LLM para corregir errores de transcripción
+                    <label class="checkbox">
+                        <input type="radio" name="llm_option" id="llmOptionYes" value="yes">
+                        Sí 
+                    </label>
+                    <label class="checkbox">
+                        <input type="radio" name="llm_option" id="llmOptionNo" value="no" checked>
+                        No
+                    </label>
+                </div>
+                <div class="field">
                     <label class="checkbox">
                         <input type="checkbox" id="showMessagesCheckbox">
                         Mostrar mensajes debug
                     </label>
+                    
                 </div>
                 <div class="control is-flex">
                     <!-- Botón para generar subtítulos -->
@@ -59,6 +76,7 @@
             <!-- Barra de progreso animada -->
             <progress id="progressBar" class="progress is-primary is-hidden" value="0" max="100"></progress>
             <p id="progressText" class="is-hidden">0%</p>
+            <p id="progressText_time_final" class="is-hidden">Tiempo total: <span id="totalTime"></span> minutos</p>
             <div id="messageBox" class="box is-hidden">
                 <p class="subtitle">Informacion detallada:</p>
                 <div id="messages"></div>
@@ -74,7 +92,7 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="content has-text-centered">
-            <p><strong>Desarrollado con Bulma (CSS Framework)</strong>.</p>
+            <p>Desarrollado con Bulma (CSS Framework).</p>
         </div>
     </footer>
 
