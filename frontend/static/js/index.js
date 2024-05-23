@@ -41,15 +41,10 @@ function updateProgress() {
         success: function(response) {
             if (response && response.progress !== undefined) {
                 // Actualizar la barra de progreso en el frontend
-                updateProgressBar((response.progress*(actual_batch/num_batches)).toFixed(2));
-                if (response.progress < 100) {
+                var actual_batch_percent=(response.progress/100)*(1/num_batches);
+                var total_batch_percent=actual_batch_percent+((actual_batch-1)/num_batches);
+                updateProgressBar((total_batch_percent*100).toFixed(2));
 
-                } else {
-                    // Cuando el progreso alcanza el 100%, oculta la barra de progreso
-                    //$('#progressBar').addClass('is-hidden');
-                    //$('#progressText').addClass('is-hidden');
-                    //updateProgressBar(0)
-                }
             }
         },
         error: function(xhr, status, error) {
@@ -83,7 +78,7 @@ function receiveSSE() {
         //receiveSSE()
     };
     eventSource.addEventListener("message", function(event) {
-        console.log('Evento SSE recibido del servidor:', event.data);
+        //console.log('Evento SSE recibido del servidor:', event.data);
         if(event.data != 'start'){
             updateProgress();
             // Actualiza el contenido del cuadro de mensajes en la interfaz web

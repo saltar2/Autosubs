@@ -12,15 +12,17 @@ app = Flask(__name__)
 #app = Quart(__name__)
 
 #docker url
-url_base='http://backend:5001'
+#port = int(os.getenv("PORT", 5000))
+url_base='http://backend:6001'
+
 #local url
-#url_base='http://localhost:5001'
+#url_base='http://localhost:6001'
 # Configuración de la subida de archivos
 
 UPLOAD_FOLDER = 'uploads'
 DOWNLOAD_FOLDER = 'downloads'
 
-ALLOWED_EXTENSIONS = {'mp4', 'avi', 'mkv', 'mov', 'm4v', 'mts', 'wmv', 'mpg', 'flv', 'mp3', 'flac', 'aac'}
+ALLOWED_EXTENSIONS = {'mp4', 'avi', 'mkv', 'mov', 'm4v', 'mts', 'wmv', 'mpg', 'flv', 'mp3', 'flac', 'aac', 'wav'}
 
 app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024 * 1024 * 2  # Permitimos hasta 2 GB
 
@@ -55,7 +57,7 @@ def prog_var():
 def codes():
     try:
         global language_codes
-        backend_url = url_base + '/language_codes'
+        backend_url = url_base + '/language_codes'  
         response = requests.get(backend_url)
         response.raise_for_status()  # Lanzar una excepción si la solicitud falla
         language_codes = response.json()

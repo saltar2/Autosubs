@@ -68,7 +68,7 @@ def extract_audio_ffmpeg(input_dir,language):
       print(f"No suitable audio track found in '{video_file}'")
 
 def convert_audio_to_wav(input_dir):
-  audio_extensions = ["aac", "mp3", "flac"]
+  audio_extensions = ["aac", "mp3", "flac","wav"]
 
   # List video files
   audio_file = [f for f in os.listdir(input_dir) if f.lower().endswith(tuple(audio_extensions))]

@@ -119,7 +119,7 @@ def healthcheck():
     return 'OK', 200
 
 if __name__ == '__main__':
-    backend_app.run(host='0.0.0.0', port=5001,threaded=True,debug =False)  # Cambia el puerto según tus necesidades
+    backend_app.run(host='0.0.0.0', port=6001,threaded=True,debug =False)  # Cambia el puerto según tus necesidades
     
     
 

@@ -2,8 +2,8 @@ import json,spacy,requests,time
 from spacy_rules import puntuation_rules_left,puntuation_rules_right
 from spacy.matcher import Matcher
 
-#backend_freeling='http://freeling:5002/morfo'
-backend_freeling='http://localhost:5002/morfo'
+backend_freeling='http://freeling:7002/morfo'
+#backend_freeling='http://localhost:7002/morfo'
 
 
 nlp = spacy.load("es_core_news_sm")
