@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, send_file,jsonify,abort,Response
+#from quart import Quart, render_template, request, redirect, url_for, send_file,jsonify,abort,Response
 import os, requests,time,threading,datetime
 from multiprocessing import Queue
 from werkzeug.utils import secure_filename
@@ -8,6 +9,7 @@ import zipfile
 
 # Configuración de la aplicación
 app = Flask(__name__)
+#app = Quart(__name__)
 
 #docker url
 url_base='http://backend:5001'
@@ -20,7 +22,7 @@ DOWNLOAD_FOLDER = 'downloads'
 
 ALLOWED_EXTENSIONS = {'mp4', 'avi', 'mkv', 'mov', 'm4v', 'mts', 'wmv', 'mpg', 'flv', 'mp3', 'flac', 'aac'}
 
-app.config['MAX_CONTENT_LENGTH'] = 2048 * 1024 * 1024  # Permitimos hasta 2 GB
+app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024 * 1024 * 2  # Permitimos hasta 2 GB
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['DOWNLOAD_FOLDER'] = DOWNLOAD_FOLDER
@@ -34,6 +36,8 @@ num_ses_messages=3
 language_codes={}
 sse_connection_with_backend=None
 event_queue = Queue()
+
+batch_results = {'names': [],'subs': [], 'text_correction': []}
 
 # Función para verificar la extensión del archivo
 def allowed_file(filename):
@@ -68,12 +72,44 @@ def index():
 
 @app.route('/upload', methods=['POST'])
 def upload_files():
+    #time.sleep(60)
     start=time.time()
+    #print(request.files)
     uploaded_files = request.files.getlist('file')
+    '''fin_uploaded=time.time()
+    uploaded_time=(fin_uploaded-start)/60
+    print(uploaded_time)'''
     lan = request.form.get('language')
     augmented_by_llm=True if request.form.get('llm_option') == 'yes' else False
+
+    batch_number = int(request.form.get('batch_number'))
+    total_batches = int(request.form.get('total_batches'))
+    #filenames_upl=[]
+    '''for file in uploaded_files:
+        filenames_upl.append(file.filename)'''
+    filenames_upl=[file.filename for file in uploaded_files]
+    batch_results['names'].extend(filenames_upl)
         # Guardar archivos y obtener los subtítulos procesados
     subs,text_correction = process_files(uploaded_files, lan,augmented_by_llm)
+
+    batch_results['subs'].extend(subs)
+    batch_results['text_correction'].extend(text_correction)
+
+    if batch_number == total_batches:
+        combined_zip_filename = generate_zip(batch_results['names'],batch_results['subs'], batch_results['text_correction'])
+        combined_zip_url = url_for('download_zip', filename=os.path.basename(combined_zip_filename))
+
+        # Limpiar resultados acumulados
+        batch_results['subs'].clear()
+        batch_results['text_correction'].clear()
+        batch_results['names'].clear()
+        end=time.time()
+        tot=(end-start)/60
+        print(f"Tiempo total: {str(tot)}")
+        return jsonify({"zip_url": combined_zip_url, "total_time": tot})
+    else:
+        return jsonify({"zip_url": None, "total_time": None, "batch_number": batch_number})
+'''
 
         # Generar archivo ZIP con los subtítulos
     zip_filename = generate_zip(uploaded_files, subs ,text_correction)
@@ -84,62 +120,54 @@ def upload_files():
     tot=(end-start)/60
     print(f"Tiempo total: {str(tot)}")
         # Retornar la URL de descarga
-    return jsonify({"zip_url":zip_url,"total_time":tot})
+    return jsonify({"zip_url":zip_url,"total_time":tot})'''
 
-def process_files(uploaded_files, lan,augmented_by_llm:bool):
+
+def process_files(uploaded_files, lan, augmented_by_llm: bool):
     subs = []
     texts = []
     
     global processing_progress
-    processing_progress=0
+    processing_progress = 0
     global num_files
-    num_files=len(uploaded_files)
-    #long=len(uploaded_files)*num_ses_messages
-    #cont=0
+    num_files = len(uploaded_files)
+    
     for file in uploaded_files:
         if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(filepath)
             try:
-            # Enviar archivo al backend y obtener subtítulo
-                res = send_to_backend(filepath, filename, lan,file.mimetype,augmented_by_llm)
-                subtitle=res['subs']
-                text_correction=res['text_correction']
+                # Enviar archivo al backend y obtener subtítulo
+                res = send_to_backend(file, lan, augmented_by_llm)
+                subtitle = res['subs']
+                text_correction = res['text_correction']
                 
-            finally:
-                os.remove(filepath)
-            subs.append(subtitle)
-            texts.append(text_correction)
-            #cont+=1
-            #processing_progress=round((cont/long)*100,1)
-    return subs,texts
+                subs.append(subtitle)
+                texts.append(text_correction)
+            except Exception as e:
+                print(f"Error al procesar el archivo: {str(e)}")
+                subs.append(None)
+                texts.append(None)
 
-def send_to_backend(filepath, filename, lan, mimetype,augmented_by_llm:bool):
+    return subs, texts
+
+def send_to_backend(file, lan, augmented_by_llm: bool):
     backend_url = url_base + '/process_video'
-    files = {'file': (filename, open(filepath, 'rb').read(), mimetype)}
-    data = {'language': lan,'augmented llm':augmented_by_llm}
+    files = {'file': (file.filename, file.stream, file.mimetype)}
+    data = {'language': lan, 'augmented llm': augmented_by_llm}
     
     try:
         response = requests.post(backend_url, data=data, files=files)
-        if not response.ok:
-            error_menssage=response.text    
         response.raise_for_status()  # Lanza una excepción si el código de estado de la respuesta no es 2xx
-        
         return response.json()
-    except requests.exceptions.RequestException as e:
-        # Error de conexión , tiempo de espera, problemas con apis etc
-        abort(503,error_menssage)
-    except Exception as e :
-        abort(500,error_menssage)
-
+    except Exception as e:
+        raise RuntimeError(f"Error al enviar el archivo al backend: {str(e)}")
+    
 def generate_zip(uploaded_files, subs,text_corrected):
     zip_filename = 'subtitles.zip'
     extension = ".es.srt"
     extension2= ".txt"
     with zipfile.ZipFile(os.path.join(app.config['DOWNLOAD_FOLDER'], zip_filename), 'w') as zipf:
         for i, subtitle in enumerate(subs, start=1):
-            video_name = os.path.splitext(uploaded_files[i - 1].filename)[0]
+            video_name = os.path.splitext(uploaded_files[i - 1])[0]
 
             subtitle_filename = f'{video_name}{extension}'
             zipf.writestr(subtitle_filename, subtitle)
@@ -155,14 +183,7 @@ def generate_zip(uploaded_files, subs,text_corrected):
 def download_zip(filename):
     return send_file(os.path.join(app.config['DOWNLOAD_FOLDER'], filename), as_attachment=True)
 
-'''@app.route('/event')
-def sse_endpoint():
-    backend_response = requests.get(url_base+'/event', stream=True)
-    #global processing_progress,num_files
-    #max_long=num_files*num_ses_messages
-    #cont=processing_progress+1
-    #processing_progress=round((cont/max_long)*100,1)
-    return Response(backend_response.iter_content(), content_type='text/event-stream')'''
+
 @app.route('/event')
 def sse_endpoint():
     global sse_connection_with_backend
@@ -207,6 +228,10 @@ def handle_general_error(e):
 def handle_specific_error(e):
     return e.description, 503
 
+@app.errorhandler(413)
+def handle_max_file_size(e):
+    return e.description,413
+
 @app.errorhandler(requests.exceptions.ChunkedEncodingError)
 def handle_brute_desconection_with_backend():
     global sse_connection_with_backend
@@ -218,5 +243,3 @@ def healthcheck():
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000,threaded=True,debug=False)
     
-    
-

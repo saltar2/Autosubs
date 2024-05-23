@@ -3,6 +3,8 @@ var autoScrollEnabled = true;
 var languagesLoaded = false;
 var eventSource= null;
 var isDarkMode = false;
+var num_batches=0;
+var actual_batch=0;
 //var eventCondition = false;
 
 function scrollToBottom() {
@@ -39,7 +41,7 @@ function updateProgress() {
         success: function(response) {
             if (response && response.progress !== undefined) {
                 // Actualizar la barra de progreso en el frontend
-                updateProgressBar(response.progress);
+                updateProgressBar((response.progress*(actual_batch/num_batches)).toFixed(2));
                 if (response.progress < 100) {
 
                 } else {
@@ -154,6 +156,69 @@ function toggleBackground() {
         isDarkMode = true;
     }
 }
+function sendBatchRequest(batches,batch_index,language,llmOption){
+    if(batch_index<num_batches){
+        var formData= new FormData()
+        for(let file of batches[batch_index]){
+            formData.append('file',file)
+        }
+        console.log("batch: ",batch_index," total: ",num_batches)
+        
+        //formData.append('file',batches[i])
+        formData.append('language',language)
+        formData.append('llm_option',llmOption)
+        formData.append('batch_number',batch_index+1)
+        formData.append('total_batches',num_batches)
+        
+        
+        actual_batch=batch_index+1;
+
+        $.ajax({
+            type: 'POST',
+            url: '/upload',
+            data: formData,
+            cache: false,
+            contentType: false,
+            processData: false,
+            
+            success: function(response) {
+                // Ocultar la información de progreso de todos los archivos
+                if( (batch_index+1)== num_batches){
+                    $('#progressBar').addClass('is-hidden');
+                    $('#progressText').addClass('is-hidden');
+        
+                    updateProgressBar(0);
+                    $('.counter').hide();
+                    $("#progressText_time_final").removeClass("is-hidden"); // Mostrar el elemento
+                    $("#totalTime").text(response.total_time.toFixed(2)); // Actualizar el tiempo total
+        
+                    // Mostrar el botón de descarga del ZIP
+                    $('#h2_name').removeClass('is-hidden');
+                    $('#downloadLink').removeClass('is-hidden').attr('href', response.zip_url);
+                    // activar el botón de submit
+                    $('#submitButton').prop('disabled', false);
+                    // Detener la llamada a la función updateProgress
+                    
+                    //eventSource.close()
+                    //console.log('Conexión SSE cerrada');
+                    if (autoScrollEnabled) {
+                        scrollToBottom();
+                    }
+                }else {
+                    sendBatchRequest(batches,batch_index+1,language,llmOption)
+                }
+                
+            },
+            error: function(xhr, status, error) {
+                // Mostrar un mensaje de error al usuario
+                alert(xhr.responseText);
+                // Desactivar el botón de submit
+                $('#submitButton').prop('disabled', false);
+            }
+        });
+    }
+    
+}
 // Cuando se envía el formulario
 $('#uploadForm').submit(function(event) {
     event.preventDefault();
@@ -161,64 +226,37 @@ $('#uploadForm').submit(function(event) {
     // Desactivar el botón de submit
     $('#submitButton').prop('disabled', true);
 
-    var formData = new FormData($(this)[0]);
+    //var formData = new FormData($(this)[0]);
     $('#progressBar').removeClass('is-hidden');
     $('#progressText').removeClass('is-hidden');
     $("#progressText_time_final").addClass('is-hidden');
     $('#h2_name').addClass('is-hidden');
     $('#downloadLink').addClass('is-hidden');
 
+    var files = $('#fileInput')[0].files;
+    var language = $('#languageSelect').val();
+    var llmOption = $('#llm_option').is(':checked') ? 'yes' : 'no';
+    var batchSize = 100; // Define el tamaño de cada lote
+    var batches = [];
+    var totalFiles = files.length;
+    
+    var totalBatches = Math.ceil(totalFiles / batchSize);
+
+    for (let i = 0; i < totalFiles; i += batchSize) {
+        batches.push([...files].slice(i, i + batchSize));
+    }
+    num_batches=totalBatches;
+
     var messageBox = document.getElementById('messages');
     messageBox.innerHTML = '';
+    document.getElementById('messages').addEventListener('scroll', handleScroll);
+
     if (eventSource == null){
         receiveSSE();
     }
+
+    sendBatchRequest(batches,0,language,llmOption)     
     
-    $.ajax({
-        type: 'POST',
-        url: '/upload',
-        data: formData,
-        cache: false,
-        contentType: false,
-        processData: false,
-        
-        success: function(response) {
-            // Ocultar la información de progreso de todos los archivos
-            
-            $('#progressBar').addClass('is-hidden');
-            $('#progressText').addClass('is-hidden');
-
-            updateProgressBar(0);
-            $('.counter').hide();
-            $("#progressText_time_final").removeClass("is-hidden"); // Mostrar el elemento
-            $("#totalTime").text(response.total_time.toFixed(2)); // Actualizar el tiempo total
-
-            // Mostrar el botón de descarga del ZIP
-            $('#h2_name').removeClass('is-hidden');
-            $('#downloadLink').removeClass('is-hidden').attr('href', response.zip_url);
-            // activar el botón de submit
-            $('#submitButton').prop('disabled', false);
-            // Detener la llamada a la función updateProgress
-            
-            //eventSource.close()
-            //console.log('Conexión SSE cerrada');
-            if (autoScrollEnabled) {
-                scrollToBottom();
-            }
-        },
-        error: function(xhr, status, error) {
-            // Mostrar un mensaje de error al usuario
-            alert(xhr.responseText);
-            // Desactivar el botón de submit
-            $('#submitButton').prop('disabled', false);
-        }
-    });
-    //if (!eventCondition){
-        
-    //    eventCondition=true
-    //}
-     
-    document.getElementById('messages').addEventListener('scroll', handleScroll);
 });
 
 //cargar idiomas si no se han cargado con la pagina
