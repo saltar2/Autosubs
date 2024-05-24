@@ -1,0 +1,6 @@
+srt
+spacy
+pandas
+mutagen
+tqdm
+pydub
