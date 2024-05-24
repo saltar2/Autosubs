@@ -34,7 +34,7 @@ os.makedirs(app.config['DOWNLOAD_FOLDER'], exist_ok=True)
 
 processing_progress=0
 num_files=0
-num_ses_messages=3
+num_ses_messages=4
 language_codes={}
 sse_connection_with_backend=None
 event_queue = Queue()

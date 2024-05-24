@@ -157,16 +157,17 @@ function sendBatchRequest(batches,batch_index,language,llmOption){
         for(let file of batches[batch_index]){
             formData.append('file',file)
         }
-        console.log("batch: ",batch_index," total: ",num_batches)
+        actual_batch=batch_index+1;
+        console.log("batch: ",actual_batch," total: ",num_batches)
         
         //formData.append('file',batches[i])
         formData.append('language',language)
         formData.append('llm_option',llmOption)
-        formData.append('batch_number',batch_index+1)
+        formData.append('batch_number',actual_batch)
         formData.append('total_batches',num_batches)
         
         
-        actual_batch=batch_index+1;
+        
 
         $.ajax({
             type: 'POST',

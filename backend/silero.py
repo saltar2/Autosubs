@@ -1,4 +1,4 @@
-import os,ffmpeg,torch
+import os,ffmpeg,torch,concurrent.futures
 
 
 #------------------------ Run VAD
@@ -46,13 +46,24 @@ def silero_vad(audio_path,vad_threshold,chunk_threshold):
 
     # Merge speech chunks
     audio_filename = os.path.splitext(os.path.basename(audio_path))[0]
-    for i in range(len(u)):
+    '''for i in range(len(u)):
         output_filename=f"vad_chunks/{audio_filename}_{i}.wav"
         save_audio(
             output_filename,
             collect_chunks(u[i], wav),
             sampling_rate=VAD_SR,
-        )
+        )'''
+
+    def save_chunk(i, chunk):
+        output_filename = f"vad_chunks/{audio_filename}_{i}.wav"
+        save_audio(output_filename, collect_chunks(chunk, wav), sampling_rate=VAD_SR)
+
+    # Save audio chunks using ThreadPoolExecutor for parallelism
+    with concurrent.ThreadPoolExecutor(max_workers=25) as executor:
+        futures = [executor.submit(save_chunk, i, chunk) for i, chunk in enumerate(u)]
+        for future in futures:
+            future.result()  # Ensure all tasks are completed
+
     os.remove("vad_chunks/silero_temp.wav")
 
     # Convert timestamps to seconds

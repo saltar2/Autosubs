@@ -61,6 +61,7 @@ def main(audio_path,language,queue_event,llm_crt:bool):#version para no web
         if(denoise and denoise_ant==False):
             #procesamos los fragmentos para quitarles el ruido
             print("Denoising ...")
+            queue_event.put('Atenuando ruido del audio ...')
             with concurrent.futures.ProcessPoolExecutor(max_workers=10) as executor:
                  futures=[executor.submit(process_frag,i, f"{audio_nombre}_{i}") for i in range(len(u))]
                  for _ in tqdm(concurrent.futures.as_completed(futures), total=len(futures)):
