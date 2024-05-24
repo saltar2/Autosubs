@@ -1,45 +1,98 @@
-¡¡¡ EN EL REPOSITORIO SE PROBEE LAS REFERENCIAS, HIPOTESIS , AUDIOS Y SCRIPTS USADOS PARA EL TESTING, ES POSIBLE QUE HALLA QUE HACER ALGUNA MODIFICACION A LOS SCRIPTS PARA QUE FUNCIONEN EN TU PC DEBIDO A QUE USO RUTAS LOCALES.!!!
+# Audio Transcription and Testing Repository
+
+## Descripción
+
+Este repositorio proporciona las referencias, hipótesis, audios y scripts utilizados para el testing. Es posible que necesites modificar algunos scripts para que funcionen en tu PC debido a que se usan rutas locales.
+
+Para probar la aplicación, se han desactivado las funciones de formateo, traducción, detección y/o mejora con GPT-4o.
+
+## Proceso de Extracción de Datasets
+
+Se han extraído datasets de audios públicos en cuatro idiomas seleccionados sin ningún criterio en particular. Los idiomas son inglés, italiano, ruso y japonés. Se eligieron datasets que contienen aproximadamente la misma cantidad de minutos de audio con transcripciones validadas:
+
+- **Inglés**: Common Voice Delta Segment 17.0
+- **Italiano**: Common Voice Delta Segment 15.0
+- **Japonés**: Common Voice Corpus 4
+- **Ruso**: Common Voice Delta Segment 10.0
+
+### Minutos de Audio por Idioma
+
+- **Inglés**: 172.9 minutos
+- **Italiano**: 106.99 minutos
+- **Japonés**: 183.1 minutos
+- **Ruso**: 93.38 minutos
+
+## Preprocesamiento de Datos
+
+### Eliminación de Audios No Validados
+
+Se deben eliminar todos los audios que no estén en el archivo `validate.tsv`. Esto se realiza utilizando el script `remove_clips.py`.
+
+### Generación de Duraciones de Clips
+
+Dependiendo de la versión de los datasets, pueden venir con un archivo llamado `clip_durations.tsv` que contiene las duraciones de los clips. Si el dataset no proporciona esta información, se incluye un script `generate_clips_duration.py` para generarla.
+
+### Cálculo de la Duración Total de los Audios
+
+Se proporciona un script `durations.py` para calcular la duración total de los audios seleccionados.
+
+## Optimización del Procesamiento de Audio
+
+Para mejorar el rendimiento de la aplicación, se combinan todos los clips de audio en un único archivo, añadiendo un silencio de 1.25 segundos entre cada clip. Esto reduce significativamente el overhead causado por procesar múltiples archivos cortos.
+
+### Justificación
+
+Procesar cada clip de audio individualmente resultaba ineficiente debido a la corta duración de los clips (2-10 segundos), lo que generaba un overhead considerable cada vez que se cambiaba de audio. En promedio, procesar un minuto de audio tomaba 2 minutos debido a este overhead.
+
+### Solución
+
+La solución fue combinar todos los audios en un único archivo, añadiendo silencios de 1.25 segundos entre cada clip. Aunque esto incrementó la duración total del archivo, el beneficio en términos de rendimiento fue significativo. Por ejemplo, para el idioma ruso, los 93.38 minutos de audio tardaron aproximadamente 180 minutos en procesarse individualmente, pero combinados en un único archivo, el tiempo de procesamiento se redujo a 22.33 minutos. Esto incluye los 1567.5 segundos (26.125 minutos) adicionales de silencio añadido entre los 1254 clips.
+
+### Ejemplo de Resultados
+
+- **Ruso**: 93.38 minutos procesados en 22.33 minutos (comparado con 180 minutos antes de la optimización).
+
+Combinar los audios en un solo archivo, incluso con la adición de silencios, demuestra ser una estrategia efectiva para mejorar el rendimiento general de la aplicación.
 
 
-Para probar la aplicacion se han desactivado las funciones de formateo, traducción, detección y/o mejora con gpt-4o.
-A continuacion se procedera a extraer datasets de audios publicos y en mi caso he elegido 4 idiomas sin ningun criterio en particular. https://commonvoice.mozilla.org/en/datasets . los idiomas son ingles, italiano, ruso y japones. se ha intentado elegir datasets que contengan aproximadamente los mismos minutos de audio con transcripciones validadas. 
+### Tiempos de Procesamiento
 
-Ingles -> Common Voice Delta Segment 17.0 
-Italiano -> Common Voice Delta Segment 15.0
-Japones -> Common Voice Corpus 4
-Ruso -> Common Voice Delta Segment 10.0
+- **Ruso**: 22.33 minutos 
+- **Italiano**: 24.28 minutos
+- **Japonés**: 43.41 minutos
+- **Inglés**: 20.5 minutos
 
-una vez extraidos los idiomas en distintos directorios se veran unos archivos tsv con informacion de las trasncripciones. los unicos audios que nos interesan son los que esten el el archivo validate.tsv por ende se eliminara cualquier otro audio que no este en ese archivo (remove_clips.py). Lo que nos deja con :
+## Generación de Transcripciones
 
-Ingles -> 172,9 minutos
-Italiano -> 106,99 minutos
-Japones -> 183.1 minutos
-Ruso -> 93,38 minutos
+Una vez obtenidas las transcripciones, se convierten en archivos `.nlp` utilizando el script `nlp_converter.py`. Se generan dos archivos: uno con las transcripciones de referencia (`[input]`) y otro con las transcripciones hipótesis (`[output]`).
 
-Dependiendo de la version de los datasets puede que vengan con un archivo llamado clip_durations.tsv. es algo que nos interesa ya que alverga las duraciones de los clips y por ello se incluye un script para generar dicha informacion si el dataset no la proporciona (generate_clips_duration.py). Por ultimo tambien se proporciona un script para ver la duracion total de los audios seleccionados (durations.py).
+## Cálculo del WER
 
-En pro de obtener un mejor rendimiento a la hora de sacar partido a las caracteristicas de la aplicacion que he desarrolado me he propuesto pasarle a la aplicacion un unico audio con todos los audios conbinados ,añadiendo un silencio de 1,25 segundos. La justificacion para esto es que si seleccionaba todos los clips y se los pasaba estos eran de duraciones tan cortas (2-10 segundos) que añadia un overhead a la aplicacion cada vez que cambiaba de audio dandonos un promedio de por cada minuto que duraba el audio se usaban 2 minutos para procesar dicho audio.
+Para calcular el Word Error Rate (WER), se utiliza la herramienta [fstalign](https://github.com/revdotcom/fstalign). Sigue este [tutorial](https://www.rev.com/blog/resources/how-to-test-speech-recognition-engine-asr-accuracy-and-word-error-rate) para configurar y usar la herramienta.
 
-En cambio al juntar los audios en un unico archivo , incluso añadiendo silencios y aumentando su longitud en duracion, el beneficio obtenido es mucho mas que merecido. Por poner un caso concreto para el idioma ruso los 93,38 minutos tardaron aproximadamente 180 minutos, pero con un unico audio tardo 22,33 minutos. A pesar de que en el audio se ha añadido 1254*1,25 = 1567,5 segundos osea 26,125 minutos extras. La cifra de 1254 son la cantidad de audios despues de borrar todos los audios que no coincidian con los criterios ya explicados antes.
+### Comando para Ejecutar FSTAlign
 
-De igual forma para los demas idiomas los resultados fueron los siguientes:
-Italiano -> 24,28 minutos
-Japones -> 43,41 minutos
-Ingles -> 20,5 minutos
+```sh
+docker run -v E:\FSTAlign\speech-datasets\earnings21\output\:/fstalign/outputs -v E:\FSTAlign\speech-datasets\earnings21\transcripts\:/fstalign/references --name fstaling -it revdotcom/fstalign
+./build/fstalign wer --ref references/mi/en/input_en.nlp --hyp outputs/mi/en/output_en.nlp
+```
 
-Una vez obtenidas las trasncripciones lo siguiente que tenemos que hacer es meter dichas transcripciones en un archivo .nlp (nlp_converter.py) , se generaran un archivo con las transcripciones de referencia \[input\] y otro con las transcripciones hipotesis \[output\].
+### Resultados de WER
 
-Para calcular el WER se hara uso de la herramienta fstalign -> https://github.com/revdotcom/fstalign  y siguiendo como referencia este tutorial https://www.rev.com/blog/resources/how-to-test-speech-recognition-engine-asr-accuracy-and-word-error-rate descargaremos la imagen docker, copiaremos los ficheros npl a un contenedor con la imagen de la herramienta corriendo o bien se pueden montar como volumenes. En mi caso , he usado este comando ya que tambien habia descargado los datos de testing que proporcionaban en el tutorial->  docker run -v E:\FSTAlign\speech-datasets\earnings21\output\:/fstalign/outputs -v E:\FSTAlign\speech-datasets\earnings21\transcripts\:/fstalign/references --name fstaling -it revdotcom/fstalign. Por ultimo ejecutamos la herramienta de una forma similar a esta -> ./build/fstalign wer --ref references/mi/en/input_en.nlp --hyp outputs/mi/en/output_en.nlp (dependiendo de donde montes o copies los ficheros). El comando anterior procesara ambos ficheros nlp y nos devolvera por consola el WER obtenido.
+- **Inglés**: 8.5%
+- **Italiano**: 10.53%
+- **Ruso**: 13.64%
+- **Japonés**: 56.13%
+
+*Nota*: El WER para japonés es notoriamente más alto, probablemente debido a un problema con el modelo de transcripción.
+
+## Mejora de las Métricas
+
+Para mejorar estas métricas, se puede realizar un fine-tuning del modelo.
+
+## Modelo Usado
+
+- **Modelo para las transcripciones de hipótesis**: Deepgram Nova-2
 
 
-Los WER obtenidos para los idiomas seleccionados son:
-Ingles -> 8,5%
-Italiano -> 10,53%
-Ruso -> 13,64%
-Japones -> 56,13%
 
-Aun no se porque en concreto el japones tiene un WER tan malo pero los textos estan normalizados, asique probablemente sea un problema del modelo.
-
-Como se mejoran estas metricas? haciendole al modelo fine-turing.
-
-MODELO USADO PARA LAS TRANSCRIPCIONES DE HIPOTESIS -> deepgram  nova-2
