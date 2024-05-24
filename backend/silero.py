@@ -59,7 +59,7 @@ def silero_vad(audio_path,vad_threshold,chunk_threshold):
         save_audio(output_filename, collect_chunks(chunk, wav), sampling_rate=VAD_SR)
 
     # Save audio chunks using ThreadPoolExecutor for parallelism
-    with concurrent.ThreadPoolExecutor(max_workers=25) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=25) as executor:
         futures = [executor.submit(save_chunk, i, chunk) for i, chunk in enumerate(u)]
         for future in futures:
             future.result()  # Ensure all tasks are completed
