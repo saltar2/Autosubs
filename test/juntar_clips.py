@@ -27,8 +27,8 @@ def unir_audios_con_separacion(directorio, archivos_audio, salida, separacion_s=
     audio_final.export(salida, format="mp3")
 
 def main():
-    lan = "en"
-    base_dir = r'C:\Users\salva\Downloads\cv-corpus-17.0-delta-2024-03-15'
+    lan = "th"
+    base_dir = "test\langs"
     directorio = os.path.join(base_dir, lan, 'clips')
     ruta_salida = os.path.join(base_dir, lan, f"salida_{lan}.mp3")
 

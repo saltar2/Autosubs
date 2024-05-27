@@ -7,28 +7,44 @@ from werkzeug.utils import secure_filename
 event_queue = Queue()
 
 language_codes = {
-    #"chinese": ["zh"],
-    "czech" : ["cs"],
-    "danish": ["da"],
+    "bulgarian": ["bg"],
+    "catalan": ["ca"],
+    "chinese_mandarin_simplified": ["zh", "zh-CN", "zh-Hans"],
+    "chinese_mandarin_traditional": ["zh-TW", "zh-Hant"],
+    "czech": ["cs"],
+    "danish": ["da", "da-DK"],
     "dutch": ["nl"],
-    "english": ["en"],
-    "french": ["fr"],
+    "english": ["en", "en-US", "en-AU", "en-GB", "en-NZ", "en-IN"],
+    "estonian": ["et"],
+    "finnish": ["fi"],
+    "flemish": ["nl-BE"],
+    "french": ["fr", "fr-CA"],
     "german": ["de"],
-    "greek" : ["el"],
-    "hindi": ["hi"],
+    "german_switzerland": ["de-CH"],
+    "greek": ["el"],
+    "hindi": ["hi", "hi-Latn"],
+    "hungarian": ["hu"],
     "indonesian": ["id"],
     "italian": ["it"],
     "japanese": ["ja"],
-    "korean": ["ko"],
+    "korean": ["ko", "ko-KR"],
+    "latvian": ["lv"],
+    "lithuanian": ["lt"],
+    "malay": ["ms"],
     "norwegian": ["no"],
     "polish": ["pl"],
-    "portuguese": ["pt"],
+    "portuguese": ["pt", "pt-BR"],
+    "romanian": ["ro"],
     "russian": ["ru"],
-    "spanish": ["es"],
-    "swedish": ["sv"],
+    "slovak": ["sk"],
+    "spanish": ["es", "es-419"],
+    "swedish": ["sv", "sv-SE"],
+    "thai": ["th", "th-TH"],
     "turkish": ["tr"],
-    "ukrainian": ["uk"]
+    "ukrainian": ["uk"],
+    "vietnamese": ["vi"]
 }
+
 
 
 def principal(video_file,lan,augmented_by_llm:bool):#funcion para web

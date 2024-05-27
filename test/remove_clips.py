@@ -5,11 +5,12 @@ def delete_not_validated(base_dir):
     #base_dir = r'C:\Users\salva\Downloads\cv-corpus-17.0-delta-2024-03-15\ru_2'
 
     # Cambiar el directorio actual
-    os.chdir(base_dir)
+    #os.chdir(base_dir)
     # Ruta al archivo validated.tsv
-    tsv_file = 'validated.tsv'
+    tsv_file = os.path.join(base_dir,'validated.tsv')
+    #tsv_file = os.path.join(base_dir,'clip_durations_reduced.tsv')
     # Ruta a la carpeta clips
-    clips_folder = 'clips'
+    clips_folder = os.path.join(base_dir,'clips')
 
     # Leer los nombres de los archivos de audio desde el archivo validated.tsv
     audio_files_in_tsv = set()
@@ -18,6 +19,7 @@ def delete_not_validated(base_dir):
         reader = csv.DictReader(file, delimiter='\t')
         for row in reader:
             audio_files_in_tsv.add(row['path'])
+            #audio_files_in_tsv.add(row['clip'])
     a=len(audio_files_in_tsv)
 
     # Obtener los nombres de los archivos en la carpeta clips

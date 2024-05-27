@@ -121,7 +121,7 @@ def convert_tsv_to_nlp(base_route, language, output_file):
 
 # Ruta base y idioma correspondiente
 base_route = "test\\langs"
-language = 'ru'  # Cambia esto al idioma correspondiente: 'en', 'it', 'ru' o 'ja'
+language = 'th'  # Cambia esto al idioma correspondiente: 'en', 'it', 'ru' o 'ja'
 
 # Ruta de salida para el archivo NLP
 output_file = f'output_{language}.nlp'
@@ -141,4 +141,5 @@ docker run -v E:\Autosubs\test\langs\:/fstalign/outputs  --name fstaling -it rev
 ./build/fstalign wer --ref outputs/it/input_it.nlp --hyp outputs/it/output_it.nlp
 ./build/fstalign wer --ref outputs/ru/input_ru.nlp --hyp outputs/ru/output_ru.nlp
 ./build/fstalign wer --ref outputs/ja/input_ja.nlp --hyp outputs/ja/output_ja.nlp
+./build/fstalign wer --ref outputs/th/input_th.nlp --hyp outputs/th/output_th.nlp
 '''

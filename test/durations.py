@@ -1,11 +1,13 @@
-import csv
+import csv,os
 
-def get_durations(lan):
+def get_durations(base_dir,lan):
 
     #lan='ru_2'
     # Rutas a los archivos
-    validated_file = rf'C:\Users\salva\Downloads\cv-corpus-17.0-delta-2024-03-15\{lan}\validated.tsv'
-    clip_duration_file = rf'C:\Users\salva\Downloads\cv-corpus-17.0-delta-2024-03-15\{lan}\clip_durations.tsv'
+    print(os.getcwd())
+    validated_file = os.path.join(base_dir,'validated.tsv')
+    clip_duration_file = os.path.join(base_dir,'clip_durations.tsv')
+    #clip_duration_file = os.path.join(base_dir,'clip_durations_reduced.tsv')
 
     # Leer los nombres de los clips desde el archivo validated.tsv
     validated_clips = set()

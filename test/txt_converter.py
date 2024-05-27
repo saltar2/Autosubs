@@ -5,6 +5,7 @@ import spacy
 import os
 import string
 import pandas as pd
+from datetime import timedelta
 
 # Función para instalar un paquete con subprocess
 def install_package(package):
@@ -37,8 +38,19 @@ def read_srt_files(file_list):
     text = ""
     for file in file_list:
         with open(file, 'r', encoding='utf-8') as f:
-            subs = srt.parse(f.read())
-            for sub in subs:
+            subs = list(srt.parse(f.read()))
+            combined_subs = []
+            current_sub = subs[0]
+            for next_sub in subs[1:]:
+                if (next_sub.start - current_sub.end) < timedelta(seconds=1.25):
+                    current_sub.content += " " + next_sub.content
+                    current_sub.end = next_sub.end
+                else:
+                    combined_subs.append(current_sub)
+                    current_sub = next_sub
+            combined_subs.append(current_sub)
+
+            for sub in combined_subs:
                 text += sub.content + "\n"
     return text
 

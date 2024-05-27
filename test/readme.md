@@ -11,6 +11,7 @@ Para probar la aplicación, se han desactivado las funciones de formateo, traduc
 Se han extraído datasets de audios públicos en cuatro idiomas seleccionados sin ningún criterio en particular. Los idiomas son inglés, italiano, ruso y japonés. Se eligieron datasets que contienen aproximadamente la misma cantidad de minutos de audio con transcripciones validadas:
 
 - **Inglés**: Common Voice Delta Segment 17.0
+- **Thailandés**: Common Voice Corpus 6.1
 - **Italiano**: Common Voice Delta Segment 15.0
 - **Japonés**: Common Voice Corpus 4
 - **Ruso**: Common Voice Delta Segment 10.0
@@ -18,6 +19,7 @@ Se han extraído datasets de audios públicos en cuatro idiomas seleccionados si
 ### Minutos de Audio por Idioma
 
 - **Inglés**: 172.9 minutos
+- **Thailandés**: 120 minutos
 - **Italiano**: 106.99 minutos
 - **Japonés**: 183.1 minutos
 - **Ruso**: 93.38 minutos
@@ -61,6 +63,7 @@ Combinar los audios en un solo archivo, incluso con la adición de silencios, de
 - **Italiano**: 24.28 minutos
 - **Japonés**: 43.41 minutos
 - **Inglés**: 20.5 minutos
+- **Thailandés**: 20:05 minutos
 
 ## Generación de Transcripciones
 
@@ -83,6 +86,7 @@ docker run -v E:\FSTAlign\speech-datasets\earnings21\output\:/fstalign/outputs -
 - **Italiano**: 10.53%
 - **Ruso**: 13.64%
 - **Japonés**: 56.13%
+
 
 *Nota*: El WER para japonés es notoriamente más alto, probablemente debido a un problema con el modelo de transcripción.
 

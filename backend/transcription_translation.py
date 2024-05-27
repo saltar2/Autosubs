@@ -134,6 +134,7 @@ def main(audio_path,language,queue_event,llm_crt:bool):#version para no web
                         os.unlink(file_path)
                 except Exception as e:
                     print(f"No se pudo eliminar {file_path}: {e}")
+            queue_event.put('FIN')
         
         return final_subs,text_correction if llm_detection_hallucinations else None
 
