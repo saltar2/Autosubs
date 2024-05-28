@@ -14,7 +14,10 @@ def get_durations(base_dir,lan):
     with open(validated_file, 'r', encoding='utf-8') as vf:
         reader = csv.DictReader(vf, delimiter='\t')
         for row in reader:
-            validated_clips.add(row['path'])
+            audio=row['path']
+            if not audio.__contains__('.mp3'):
+                audio=audio+".mp3"
+            validated_clips.add(audio)
 
     # Leer las duraciones de los clips desde el archivo clip_duration.tsv
     clip_durations = {}

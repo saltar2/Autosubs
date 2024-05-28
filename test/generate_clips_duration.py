@@ -24,7 +24,7 @@ def save_duration(audio_file):
 def save_durations_to_tsv(audio_files, output_file):
     with open(output_file, 'w') as f:
         f.write("clip\tduration[ms]\n")
-        with concurrent.futures.ProcessPoolExecutor(max_workers=50) as executor:
+        with concurrent.futures.ProcessPoolExecutor(max_workers=1) as executor:
             results = list(tqdm(executor.map(save_duration, audio_files), total=len(audio_files), desc="Processing", unit="files"))
             for result in results:
                 f.write(f"{result}\n")

@@ -18,8 +18,12 @@ def delete_not_validated(base_dir):
     with open(tsv_file, 'r', encoding='utf-8') as file:
         reader = csv.DictReader(file, delimiter='\t')
         for row in reader:
-            audio_files_in_tsv.add(row['path'])
-            #audio_files_in_tsv.add(row['clip'])
+            audio=row['path']
+            #audio=row['clip']
+            if not audio.__contains__('.mp3'):
+                audio=audio+".mp3"
+            audio_files_in_tsv.add(audio)
+            
     a=len(audio_files_in_tsv)
 
     # Obtener los nombres de los archivos en la carpeta clips

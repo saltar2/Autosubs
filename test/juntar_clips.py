@@ -27,7 +27,7 @@ def unir_audios_con_separacion(directorio, archivos_audio, salida, separacion_s=
     audio_final.export(salida, format="mp3")
 
 def main():
-    lan = "th"
+    lan = "es"
     base_dir = "test\langs"
     directorio = os.path.join(base_dir, lan, 'clips')
     ruta_salida = os.path.join(base_dir, lan, f"salida_{lan}.mp3")

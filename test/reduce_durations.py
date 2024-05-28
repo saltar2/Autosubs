@@ -1,7 +1,7 @@
 import csv,os
 
 base_dir="test\langs"
-lan="th"
+lan="es"
 
 # Definir el archivo de entrada y salida
 input_file = os.path.join(base_dir,lan,'clip_durations.tsv')
@@ -37,9 +37,18 @@ print(f"Archivo {output_file} generado con éxito.")
 selected_clip_names = {clip['clip'] for clip in selected_clips}
 
 # Leer el archivo validate.tsv y hacer el join
-with open(validate_file, 'r', newline='',encoding='utf-8') as validate_infile:
+with open(validate_file, 'r', newline='', encoding='utf-8') as validate_infile:
     validate_reader = csv.DictReader(validate_infile, delimiter='\t')
-    validate_rows = [row for row in validate_reader if row['path'] in selected_clip_names]
+    
+    # Verifica si cada path tiene la extensión .mp3, si no la tiene, se la añade
+    validate_rows = []
+    for row in validate_reader:
+        path = row['path']
+        if not path.endswith('.mp3'):
+            path += '.mp3'
+        if path in selected_clip_names:
+            row['path'] = path
+            validate_rows.append(row)
 
 # Escribir el archivo validate_reduced.tsv
 with open(validate_reduced_file, 'w', newline='',encoding='utf-8') as validate_outfile:

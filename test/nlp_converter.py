@@ -18,7 +18,9 @@ models_to_install = {
     "en": "en_core_web_sm",
     "it": "it_core_news_sm",
     "ru": "ru_core_news_sm",
-    "ja": "ja_core_news_sm"
+    "ja": "ja_core_news_sm",
+    "ko": "ko_core_news_sm",
+    "es": "es_core_news_sm"
 }
 
 # Intenta cargar los modelos, y si falla, los instala y los carga de nuevo
@@ -121,7 +123,7 @@ def convert_tsv_to_nlp(base_route, language, output_file):
 
 # Ruta base y idioma correspondiente
 base_route = "test\\langs"
-language = 'th'  # Cambia esto al idioma correspondiente: 'en', 'it', 'ru' o 'ja'
+language = 'es'  # Cambia esto al idioma correspondiente: 'en', 'it', 'ru' o 'ja'
 
 # Ruta de salida para el archivo NLP
 output_file = f'output_{language}.nlp'
@@ -134,12 +136,13 @@ print(f"Archivo NLP guardado en {output_file}")
 print(f"Archivo NLP guardado en {input_file}")
 
 '''
-docker run -v E:\Autosubs\test\langs\:/fstalign/outputs  --name fstaling -it revdotcom/fstalign
+docker run -v E:\Autosubs\test\langs\:/fstalign/outputs -it revdotcom/fstalign
 
 ./build/fstalign wer --ref references/mi/en/input_en.nlp --hyp outputs/mi/en/output_en.nlp
 ./build/fstalign wer --ref outputs/en/input_en.nlp --hyp outputs/en/output_en.nlp
 ./build/fstalign wer --ref outputs/it/input_it.nlp --hyp outputs/it/output_it.nlp
 ./build/fstalign wer --ref outputs/ru/input_ru.nlp --hyp outputs/ru/output_ru.nlp
 ./build/fstalign wer --ref outputs/ja/input_ja.nlp --hyp outputs/ja/output_ja.nlp
-./build/fstalign wer --ref outputs/th/input_th.nlp --hyp outputs/th/output_th.nlp
+./build/fstalign wer --ref outputs/ko/input_ko.nlp --hyp outputs/ko/output_ko.nlp
+./build/fstalign wer --ref outputs/es/input_es.nlp --hyp outputs/es/output_es.nlp
 '''

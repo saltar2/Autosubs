@@ -1,28 +1,24 @@
 # Audio Transcription and Testing Repository
 
-## Descripción
-
-Este repositorio proporciona las referencias, hipótesis, audios y scripts utilizados para el testing. Es posible que necesites modificar algunos scripts para que funcionen en tu PC debido a que se usan rutas locales.
-
-Para probar la aplicación, se han desactivado las funciones de formateo, traducción, detección y/o mejora con GPT-4o.
-
 ## Proceso de Extracción de Datasets
 
-Se han extraído datasets de audios públicos en cuatro idiomas seleccionados sin ningún criterio en particular. Los idiomas son inglés, italiano, ruso y japonés. Se eligieron datasets que contienen aproximadamente la misma cantidad de minutos de audio con transcripciones validadas:
+Se han extraído datasets de audios públicos [Common voice mozilla](https://commonvoice.mozilla.org/en/datasets) en seis idiomas seleccionados sin ningún criterio en particular. Los idiomas son inglés, italiano, ruso ,japonés , coreano y español. Se eligieron datasets que contienen aproximadamente la misma cantidad de minutos de audio con transcripciones validadas:
 
 - **Inglés**: Common Voice Delta Segment 17.0
-- **Thailandés**: Common Voice Corpus 6.1
 - **Italiano**: Common Voice Delta Segment 15.0
 - **Japonés**: Common Voice Corpus 4
 - **Ruso**: Common Voice Delta Segment 10.0
+- **Coreano**: Common Voice Corpus 17.0
+- **Español**: Common Voice Corpus 2
 
 ### Minutos de Audio por Idioma
 
 - **Inglés**: 172.9 minutos
-- **Thailandés**: 120 minutos
 - **Italiano**: 106.99 minutos
 - **Japonés**: 183.1 minutos
 - **Ruso**: 93.38 minutos
+- **Coreano**: 97,58 minutos
+- **Español**: 119,8 minutos
 
 ## Preprocesamiento de Datos
 
@@ -37,6 +33,10 @@ Dependiendo de la versión de los datasets, pueden venir con un archivo llamado 
 ### Cálculo de la Duración Total de los Audios
 
 Se proporciona un script `durations.py` para calcular la duración total de los audios seleccionados.
+
+### Reducción de minutos de audios
+
+Para el caso concreto del español los datasets proporcionados o eran muy extensos o poco y por ello se eligio uno con una extension superior pero luego se eliminaron audios hasta dejar solo 120 minutos de audios validos. Para eso esta el script `reduce_durations.py` que genera 2 archivos validated_reduced.tsv y clip_durations_reduced.tsv. Para terminar se volveria a ejecutar el archivo `script.py` que engloba los otros 3 ejecutables mencionados en los anteriores apartados (`remove_clips.py`,`generate_clips_duration.py`,`durations.py` ). Para no crear un script especificamente para este caso que simplemente es el mismo codigo pero cambiando un par de variables, solamente se comenta y descomentan estas lineas -> 10,11 y 21,22 en `remove_clips.py` y 9,10 en `durations.py`
 
 ## Optimización del Procesamiento de Audio
 
@@ -54,7 +54,7 @@ La solución fue combinar todos los audios en un único archivo, añadiendo sile
 
 - **Ruso**: 93.38 minutos procesados en 22.33 minutos (comparado con 180 minutos antes de la optimización).
 
-Combinar los audios en un solo archivo, incluso con la adición de silencios, demuestra ser una estrategia efectiva para mejorar el rendimiento general de la aplicación.
+Combinar los audios en un solo archivo, incluso con la adición de silencios, demuestra ser una estrategia efectiva para mejorar el rendimiento general de la aplicación. De esta forma se aprovecha del paralelismo en algunas funciones como transcribir o atenuar el ruido del audio.
 
 
 ### Tiempos de Procesamiento
@@ -63,11 +63,12 @@ Combinar los audios en un solo archivo, incluso con la adición de silencios, de
 - **Italiano**: 24.28 minutos
 - **Japonés**: 43.41 minutos
 - **Inglés**: 20.5 minutos
-- **Thailandés**: 20:05 minutos
+- **Coreano**: 10,9 minutos
+- **Español**: 14,76 minutos
 
 ## Generación de Transcripciones
 
-Una vez obtenidas las transcripciones, se convierten en archivos `.nlp` utilizando el script `nlp_converter.py`. Se generan dos archivos: uno con las transcripciones de referencia (`[input]`) y otro con las transcripciones hipótesis (`[output]`).
+Una vez obtenidas las transcripciones, se convierten en archivos `.nlp` utilizando el script `nlp_converter.py`. Se generan dos archivos: uno con las transcripciones de referencia (`[input]`) y otro con las transcripciones hipótesis (`[output]`). Para el caso del español se debe modificar esta linea ->   text = parse_validate_tsv(os.path.join(base_route, language, 'validated.tsv')) y modificar 'validated.tsv' por 'validated_reduced.tsv'
 
 ## Cálculo del WER
 
@@ -76,16 +77,25 @@ Para calcular el Word Error Rate (WER), se utiliza la herramienta [fstalign](htt
 ### Comando para Ejecutar FSTAlign
 
 ```sh
-docker run -v E:\FSTAlign\speech-datasets\earnings21\output\:/fstalign/outputs -v E:\FSTAlign\speech-datasets\earnings21\transcripts\:/fstalign/references --name fstaling -it revdotcom/fstalign
-./build/fstalign wer --ref references/mi/en/input_en.nlp --hyp outputs/mi/en/output_en.nlp
+docker run -v E:\Autosubs\test\langs\:/fstalign/outputs -it revdotcom/fstalign
+
+./build/fstalign wer --ref outputs/en/input_en.nlp --hyp outputs/en/output_en.nlp
+./build/fstalign wer --ref outputs/it/input_it.nlp --hyp outputs/it/output_it.nlp
+./build/fstalign wer --ref outputs/ru/input_ru.nlp --hyp outputs/ru/output_ru.nlp
+./build/fstalign wer --ref outputs/ja/input_ja.nlp --hyp outputs/ja/output_ja.nlp
+./build/fstalign wer --ref outputs/ko/input_ko.nlp --hyp outputs/ko/output_ko.nlp
+./build/fstalign wer --ref outputs/es/input_es.nlp --hyp outputs/es/output_es.nlp
 ```
 
 ### Resultados de WER
 
-- **Inglés**: 8.5%
-- **Italiano**: 10.53%
-- **Ruso**: 13.64%
-- **Japonés**: 56.13%
+- **Inglés**: 8,5%
+- **Italiano**: 10,53%
+- **Español**: 13,25%
+- **Ruso**: 13,64%
+- **Coreano**: 29,6%
+- **Japonés**: 56,13%
+
 
 
 *Nota*: El WER para japonés es notoriamente más alto, probablemente debido a un problema con el modelo de transcripción.
