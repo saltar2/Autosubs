@@ -107,7 +107,7 @@ def correct_subs(sub,text):
     
     if(response.choices[0].message.content):
         srt_revised=response.choices[0].message.content
-        return srt.parse(srt_revised)
+        return list(srt.parse(srt_revised))
     else:
         raise exceptions.CustomError('Some error related to openai api response')
 
