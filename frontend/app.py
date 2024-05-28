@@ -13,10 +13,10 @@ app = Flask(__name__)
 
 #docker url
 #port = int(os.getenv("PORT", 5000))
-url_base='http://backend:6001'
+#url_base='http://backend:6001'
 
 #local url
-#url_base='http://localhost:6001'
+url_base='http://localhost:6001'
 # Configuración de la subida de archivos
 
 UPLOAD_FOLDER = 'uploads'
@@ -82,7 +82,8 @@ def upload_files():
     uploaded_time=(fin_uploaded-start)/60
     print(uploaded_time)'''
     lan = request.form.get('language')
-    augmented_by_llm=True if request.form.get('llm_option') == 'yes' else False
+    llm_detection=True if request.form.get('llm_detection') == 'yes' else False
+    augmented_by_llm=True if request.form.get('llm_correction') == 'yes' else False
 
     batch_number = int(request.form.get('batch_number'))
     total_batches = int(request.form.get('total_batches'))
@@ -92,7 +93,7 @@ def upload_files():
     filenames_upl=[file.filename for file in uploaded_files]
     batch_results['names'].extend(filenames_upl)
         # Guardar archivos y obtener los subtítulos procesados
-    subs,text_correction = process_files(uploaded_files, lan,augmented_by_llm)
+    subs,text_correction = process_files(uploaded_files, lan,llm_detection,augmented_by_llm)
 
     batch_results['subs'].extend(subs)
     batch_results['text_correction'].extend(text_correction)
@@ -125,7 +126,7 @@ def upload_files():
     return jsonify({"zip_url":zip_url,"total_time":tot})'''
 
 
-def process_files(uploaded_files, lan, augmented_by_llm: bool):
+def process_files(uploaded_files, lan, llm_detection: bool,augmented_by_llm: bool):
     subs = []
     texts = []
     
@@ -138,7 +139,7 @@ def process_files(uploaded_files, lan, augmented_by_llm: bool):
         if file and allowed_file(file.filename):
             try:
                 # Enviar archivo al backend y obtener subtítulo
-                res = send_to_backend(file, lan, augmented_by_llm)
+                res = send_to_backend(file, lan,llm_detection, augmented_by_llm)
                 subtitle = res['subs']
                 text_correction = res['text_correction']
                 
@@ -151,10 +152,10 @@ def process_files(uploaded_files, lan, augmented_by_llm: bool):
 
     return subs, texts
 
-def send_to_backend(file, lan, augmented_by_llm: bool):
+def send_to_backend(file, lan,llm_detection: bool, augmented_by_llm: bool):
     backend_url = url_base + '/process_video'
     files = {'file': (file.filename, file.stream, file.mimetype)}
-    data = {'language': lan, 'augmented llm': augmented_by_llm}
+    data = {'language': lan,'llm_detection':llm_detection, 'augmented llm': augmented_by_llm}
     
     try:
         response = requests.post(backend_url, data=data, files=files)

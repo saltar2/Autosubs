@@ -50,16 +50,19 @@
                     </div>
                 </div>
                 <div class="field">
-                    Usar LLM para corregir errores de transcripción
-                    <label class="checkbox">
-                        <input type="radio" name="llm_option" id="llmOptionYes" value="yes">
-                        Sí 
-                    </label>
-                    <label class="checkbox">
-                        <input type="radio" name="llm_option" id="llmOptionNo" value="no" checked>
-                        No
-                    </label>
+                    <span>Usar LLM para:</span>
+                    <div>
+                        <label class="checkbox">
+                            <input type="checkbox" name="llm_detect_errors" id="llmDetectErrors" value="yes">
+                            Detectar errores de transcripción
+                        </label>
+                        <label class="checkbox">
+                            <input type="checkbox" name="llm_correct_errors" id="llmCorrectErrors" value="yes">
+                            Corregir errores de transcripción
+                        </label>
+                    </div>
                 </div>
+                
                 <div class="field">
                     <label class="checkbox">
                         <input type="checkbox" id="showMessagesCheckbox">

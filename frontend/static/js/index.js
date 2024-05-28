@@ -151,7 +151,7 @@ function toggleBackground() {
         isDarkMode = true;
     }
 }
-function sendBatchRequest(batches,batch_index,language,llmOption){
+function sendBatchRequest(batches,batch_index,language,detectErrorsChecked,correctErrorsChecked){
     if(batch_index<num_batches){
         var formData= new FormData()
         for(let file of batches[batch_index]){
@@ -162,7 +162,8 @@ function sendBatchRequest(batches,batch_index,language,llmOption){
         
         //formData.append('file',batches[i])
         formData.append('language',language)
-        formData.append('llm_option',llmOption)
+        formData.append('llm_detection',detectErrorsChecked)
+        formData.append('llm_correction',correctErrorsChecked)
         formData.append('batch_number',actual_batch)
         formData.append('total_batches',num_batches)
         
@@ -201,7 +202,7 @@ function sendBatchRequest(batches,batch_index,language,llmOption){
                         scrollToBottom();
                     }
                 }else {
-                    sendBatchRequest(batches,batch_index+1,language,llmOption)
+                    sendBatchRequest(batches,batch_index+1,language,detectErrorsChecked,correctErrorsChecked)
                 }
                 
             },
@@ -231,7 +232,8 @@ $('#uploadForm').submit(function(event) {
 
     var files = $('#fileInput')[0].files;
     var language = $('#languageSelect').val();
-    var llmOption = $('#llm_option').is(':checked') ? 'yes' : 'no';
+    var detectErrorsChecked = $('#llmDetectErrors').is(':checked') ? 'yes' : 'no';
+    var correctErrorsChecked = $('#llmCorrectErrors').is(':checked') ? 'yes' : 'no';
     var batchSize = 100; // Define el tamaño de cada lote
     var batches = [];
     var totalFiles = files.length;
@@ -251,7 +253,7 @@ $('#uploadForm').submit(function(event) {
         receiveSSE();
     }
 
-    sendBatchRequest(batches,0,language,llmOption)     
+    sendBatchRequest(batches,0,language,detectErrorsChecked,correctErrorsChecked)     
     
 });
 
@@ -291,6 +293,23 @@ $(document).ready(function() {
     $('#toggleBackgroundButton').click(function() {
         toggleBackground();
     });
+
+    const detectErrorsCheckbox = document.getElementById('llmDetectErrors');
+    const correctErrorsCheckbox = document.getElementById('llmCorrectErrors');
+
+    detectErrorsCheckbox.addEventListener('change', function() {
+                if (detectErrorsCheckbox.checked) {
+                    correctErrorsCheckbox.disabled = false;
+                } else {
+                    correctErrorsCheckbox.checked = false;
+                    correctErrorsCheckbox.disabled = true;
+                }
+            });
+
+            // Initialize the state on page load
+            if (!detectErrorsCheckbox.checked) {
+                correctErrorsCheckbox.disabled = true;
+            }
 
 });
 
