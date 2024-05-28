@@ -47,7 +47,7 @@ language_codes = {
 
 
 
-def principal(video_file,lan,augmented_by_llm:bool):#funcion para web
+def principal(video_file,lan,llm_detection: bool,augmented_by_llm:bool):#funcion para web
    
     video_filename = os.path.join(backend_app.config['TEMP'], secure_filename(video_file.filename))
     video_file.save(video_filename)
@@ -59,7 +59,7 @@ def principal(video_file,lan,augmented_by_llm:bool):#funcion para web
         else:#es un video
             audio_path=extract_audio.extract_audio_ffmpeg(os.path.join(backend_app.config['TEMP']),lan)
         
-        sub,text_correction=trtr.main(audio_path,lan,event_queue,augmented_by_llm)
+        sub,text_correction=trtr.main(audio_path,lan,event_queue,llm_detection,augmented_by_llm)
         
     except exceptions.CustomError:
          raise 
@@ -88,12 +88,13 @@ def get_language_codes():
 def process_video():
         # Obtiene los datos del formulario enviado por el frontend
     lan = request.form.get('language')
+    llm_detection=augmented_by_llm=True if "true" == request.form.get('llm_detection').lower() else False
     augmented_by_llm=True if "true" == request.form.get('augmented llm').lower() else False #llega como string aunque lo he mandado como bool
     video_file= request.files['file']
     
     
     try :
-        subs,text_correction=principal(video_file, lan,augmented_by_llm)
+        subs,text_correction=principal(video_file, lan,llm_detection,augmented_by_llm)
     except exceptions.CustomError as e:
          abort(503,e)#service unavailable
     except Exception as e:

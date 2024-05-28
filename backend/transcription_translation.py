@@ -8,12 +8,12 @@ def process_frag(i,aud_name):
         #"vad_chunks/{aud_name}_d.wav"
         denoiser.denoise(f,i,name)
 
-def main(audio_path,language,queue_event,llm_crt:bool):#version para no web
+def main(audio_path,language,queue_event,llm_dtc:bool,llm_crt:bool):#version para no web
     #raise Exception('Error custom')
     transcription=True
     transcription_mode=2 # mode 2 deepgram #mode 1 whisper.ccp
 
-    llm_detection_hallucinations=False
+    llm_detection_hallucinations=llm_dtc
     llm_correction=llm_crt
 
     translation=False
