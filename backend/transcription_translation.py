@@ -16,7 +16,7 @@ def main(audio_path,language,queue_event,llm_dtc:bool,llm_crt:bool):#version par
     llm_detection_hallucinations=llm_dtc
     llm_correction=llm_crt
 
-    translation=False
+    translation=True
 
     denoise=True
     denoise_ant=False# false indica que no se hace denoise antes de trocear el audio sino despues, true indica lo contrario

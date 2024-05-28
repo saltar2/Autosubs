@@ -13,10 +13,10 @@ app = Flask(__name__)
 
 #docker url
 #port = int(os.getenv("PORT", 5000))
-#url_base='http://backend:6001'
+url_base='http://backend:6001'
 
 #local url
-url_base='http://localhost:6001'
+#url_base='http://localhost:6001'
 # Configuración de la subida de archivos
 
 UPLOAD_FOLDER = 'uploads'
@@ -34,7 +34,7 @@ os.makedirs(app.config['DOWNLOAD_FOLDER'], exist_ok=True)
 
 processing_progress=0
 num_files=0
-num_ses_messages=5
+num_ses_messages=8
 language_codes={}
 sse_connection_with_backend=None
 event_queue = Queue()
