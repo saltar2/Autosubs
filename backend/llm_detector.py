@@ -63,7 +63,7 @@ def revisar_sub(sub,lan,sub2):
     
     #print(response)
     if(response.choices[0].message.content):
-        text_corrections=response.choices[0].message.content
+        text_corrections=response.choices[0].message.content.strip()
         return text_corrections
     else:
         raise exceptions.CustomError('Some error related to openai api response')
@@ -85,11 +85,12 @@ def correct_subs(sub,text):
                 2. Before conjunctions \
                 3. Before prepositions \
             To perform the solicited changes on the SRT you are able to modify the timestamps and content of the subtitles but the subtitles cannot be overlaping. \
-            Finally you have to return the entire SRT file in the same format as i send you without any further information about the performed changes. \
+            Finally you have to return the entire SRT file in the same format as i send you without any further information about the performed changes.
+            Ensure there are no extraneous characters like ``` at the beginning or end of the response, return only the corrected SRT content.
             Took the time you need to perform with accurancy the task."  
                  
     text_srt_1=f"SRT file ->\n {subtitle1}"
-    text_corrections=f"\n File with corrections suggested-> {text}"
+    text_corrections=f"\n File with corrections suggested ->\n {text}"
 
     sys_prompt=prompt
     user_prompt=text_srt_1+text_corrections
