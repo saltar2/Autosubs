@@ -21,21 +21,24 @@ RUN echo "******** Installing dependencies... please wait" && \
 
 
 #descomentar run para subir a git 
-RUN cd /tmp && \
-    echo "******** Downloading FreeLing... please wait" && \
-    wget --progress=dot:giga https://github.com/TALP-UPC/FreeLing/archive/refs/tags/${FL_VERSION}.tar.gz && \
-    wget --progress=dot:giga https://github.com/TALP-UPC/FreeLing/releases/download/4.2/FreeLing-langs-src-${FL_VERSION}.tar.gz
-     
+#RUN cd /tmp && \
+#    echo "******** Downloading FreeLing... please wait" && \
+#    wget --progress=dot:giga --tries=20 --retry-conrefused https://github.com/TALP-UPC/FreeLing/archive/refs/tags/${FL_VERSION}.tar.gz && \
+#    wget --progress=dot:giga --tries=20 --retry-conrefused https://github.com/TALP-UPC/FreeLing/releases/download/4.2/FreeLing-langs-src-${FL_VERSION}.tar.gz
+
+#comentar estos 2 copis para subir a git
+
+COPY ./${FL_VERSION}.tar.gz /tmp
+COPY ./FreeLing-langs-src-${FL_VERSION}.tar.gz /tmp
 RUN echo "******** Uncompressing FreeLing... please wait" && ls -l /tmp && cd /tmp && \
     tar xzf ${FL_VERSION}.tar.gz && \
     tar xzf FreeLing-langs-src-${FL_VERSION}.tar.gz && \
     rm -rf FreeLing-$FL_VERSION.tar.gz FreeLing-langs-src-$FL_VERSION.tar.gz
 
-#comentar estos 2 copis para subir a git
 
-#COPY ./FreeLing-${FL_VERSION} /tmp
 
-#COPY ./FreeLing-langs-src-${FL_VERSION} /tmp
+
+
  
 
 RUN cd /tmp/FreeLing-${FL_VERSION} && \

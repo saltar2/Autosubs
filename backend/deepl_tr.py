@@ -109,14 +109,14 @@ def deepl_tr(subs,language,deepl_target_lang):
     try:
         translator = deepl.Translator(deepl_authkey)
         for i, n in enumerate(tqdm(grouped_lines)):
-            x = ["\n".join(n).strip()] #multiples lineas
+            x = ["|\n".join(n).strip()] #multiples lineas
             #x=n
             if language.lower() == "japanese":
                 result = translator.translate_text(x, source_lang="JA", target_lang=deepl_target_lang)
             else:#default language
                 #result = translator.translate_text(x,source_lang='EN', target_lang=deepl_target_lang)
                 result = translator.translate_text(x, target_lang=deepl_target_lang)
-            english_tl = result[0].text.strip().splitlines()
+            english_tl = result[0].text.strip("|\n").splitlines()
             #assert len(english_tl) == len(n), ("Invalid translation line count ("+ str(len(english_tl))+ " vs "+ str(len(n))+ ")")
 
             #if i != 0:#quitado para que no agrupe y traduzca linea a linea
