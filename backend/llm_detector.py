@@ -176,7 +176,12 @@ def correct_subs_v2(sub, text, max_retries=3, delay=2):
                 # Attempt to parse the SRT content
                 try:
                     aux_list = list(srt.parse(srt_revised))
-                    return aux_list
+
+                    is_valid,count_subs,count_new_subs=compare_srt_lines(sub,aux_list)
+
+                    if is_valid:
+                        return aux_list
+                    
                 except Exception as e:
                     print(f"Parsing failed: {str(e)}. Retrying...")
             else:
@@ -190,7 +195,29 @@ def correct_subs_v2(sub, text, max_retries=3, delay=2):
     raise exceptions.CustomError('Failed to obtain a valid SRT response after multiple attempts.')
 
 
+def compare_srt_lines(original_srt, revised_srt):
+    """
+    Compares the number of lines in the original and revised SRT subtitles.
+    
+    Args:
+        original_srt (list): List of parsed original SRT lines.
+        revised_srt (list): List of parsed revised SRT lines.
 
+    Returns:
+        bool: True if the line counts are acceptable, False otherwise.
+        int: Number of lines in the original and revised SRT.
+    """
+    original_line_count = len(original_srt)
+    revised_line_count = len(revised_srt)
+
+    # Define acceptable change threshold (you can adjust this as needed)
+    acceptable_change_threshold = 3  # e.g., max 2 lines difference
+
+    # Check if the number of lines is within acceptable limits
+    if abs(original_line_count - revised_line_count) <= acceptable_change_threshold:
+        return True, original_line_count, revised_line_count
+    else:
+        return False, original_line_count, revised_line_count
 
 
 '''
