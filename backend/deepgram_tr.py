@@ -73,7 +73,7 @@ def deepgram_tr(u, model_size,audio_nombre,language):
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:#para cambiar numero de workers mira esto -> https://developers.deepgram.com/docs/getting-started-with-pre-recorded-audio#rate-limits
         futures = [executor.submit(process_chunk,i, f"{audio_nombre}_{i}", dg_client, model_size,language) for i in range(len(u))]
         
-        for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures)):
+        for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures),desc=f"Processing Items from {model_size}"):
             chunk_index,response = future.result()
             all_results_completed[chunk_index]=response
 
