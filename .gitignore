@@ -19,3 +19,5 @@ backend/error.log
 backend/FreeLing
 backend/whisper_cpp.py
 
+backend/freeling/4.2.1.tar.gz
+backend/freeling/FreeLing-langs-src-4.2.1.tar.gz

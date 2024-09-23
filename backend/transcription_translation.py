@@ -101,7 +101,7 @@ def main(audio_path,language,queue_event,llm_dtc:bool,llm_crt:bool):#version par
                     queue_event.put('Revisando transcripcion ...')
                     text_correction=llmdct.revisar_sub(subs,language,other_subs)
                     if llm_correction:
-                        subs_revised=llmdct.correct_subs(subs,text_correction)
+                        subs_revised=llmdct.correct_subs_v2(subs,text_correction)
                         final_subs=subs_revised
 
                 subs_before_translation= subs_revised if llm_correction else subs

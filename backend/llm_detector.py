@@ -64,6 +64,9 @@ def revisar_sub(sub,lan,sub2):
     #print(response)
     if(response.choices[0].message.content):
         text_corrections=response.choices[0].message.content.strip()
+        output="text_corretions.txt"
+        with open(output,"a",encoding="utf-8") as out:
+            out.write(text_corrections)
         return text_corrections
     else:
         raise exceptions.CustomError('Some error related to openai api response')
@@ -108,9 +111,86 @@ def correct_subs(sub,text):
     
     if(response.choices[0].message.content):
         srt_revised=response.choices[0].message.content
-        return list(srt.parse(srt_revised))
+        output="sub_corrected.txt"
+        with open(output,"a",encoding="utf-8") as out:
+            out.write(srt_revised)
+        #aux_list=list(srt.parse(srt_revised))
+        #return aux_list
+        try:
+            # Attempt to parse the SRT content
+            aux_list = list(srt.parse(srt_revised))
+            return aux_list
+        except Exception as e:
+            raise exceptions.CustomError(f"SRT parsing failed: {str(e)}")
     else:
         raise exceptions.CustomError('Some error related to openai api response')
+
+
+
+import time
+
+def correct_subs_v2(sub, text, max_retries=3, delay=2):
+    print("Corrigiendo con LLM...")
+
+    subtitle1 = srt.compose(sub)
+
+    prompt = f"As an analyst, you are tasked to perform all the corrections for a given SRT file and a given list of errors with explanation and the alternative solution. \
+            You are only able to modify the specified errors on the provided text. \
+            When you perform the indicated changes on the SRT file to correct it, please take these considerations into account:\
+                1. A subtitle must last a minimum of 1 second and a maximum of 8 seconds. \
+                2. The maximum lines that can be shown together on screen are 2. \
+            If you need to perform a text separation to fit the above statements, you can use these rules to execute a semantic separation of the phrase: \
+                1. After punctuation marks. \
+                2. Before conjunctions. \
+                3. Before prepositions. \
+            To perform the solicited changes on the SRT, you are able to modify the timestamps and content of the subtitles, but the subtitles cannot be overlapping. \
+            Finally, you have to return the entire SRT file in the same format as I sent you without any further information about the performed changes. \
+            Ensure there are no extraneous characters like ``` at the beginning or end of the response; return only the corrected SRT content. \
+            Take the time you need to perform the task accurately."
+
+    text_srt_1 = f"SRT file ->\n {subtitle1}"
+    text_corrections = f"\n File with corrections suggested ->\n {text}"
+
+    sys_prompt = prompt
+    user_prompt = text_srt_1 + text_corrections
+
+    assert comprobacion_tokens(sys_prompt, user_prompt, True)  # For model gpt3 max tokens are 16K but for gpt4 models supports 128K
+
+    for attempt in range(max_retries):
+        try:
+            response = client.chat.completions.create(
+                model=modelo,
+                messages=[
+                    {"role": "system", "content": sys_prompt},
+                    {"role": "user", "content": user_prompt},
+                ]
+            )
+            
+            if response.choices[0].message.content:
+                srt_revised = response.choices[0].message.content.strip()
+                
+                output = "sub_corrected.txt"
+                with open(output, "a", encoding="utf-8") as out:
+                    out.write(srt_revised)
+
+                # Attempt to parse the SRT content
+                try:
+                    aux_list = list(srt.parse(srt_revised))
+                    return aux_list
+                except Exception as e:
+                    print(f"Parsing failed: {str(e)}. Retrying...")
+            else:
+                print("Empty response from API. Retrying...")
+
+        except Exception as e:
+            print(f"API request failed: {str(e)}. Retrying...")
+
+        time.sleep(delay)  # Wait before the next retry
+
+    raise exceptions.CustomError('Failed to obtain a valid SRT response after multiple attempts.')
+
+
+
 
 
 '''
