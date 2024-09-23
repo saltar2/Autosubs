@@ -127,12 +127,12 @@ def correct_subs_chunk_v3(sub_chunk, text, max_retries=3, delay=2):
                     corrected_chunk = list(srt.parse(srt_revised))
 
                     # Validate the corrected chunk
-                    is_valid, count_subs, count_new_subs = compare_srt_lines(sub_chunk, corrected_chunk)
+                    #is_valid, count_subs, count_new_subs = compare_srt_lines(sub_chunk, corrected_chunk)
 
-                    if is_valid:
-                        return corrected_chunk
-                    else:
-                        print("Correction was invalid. Retrying...")
+                    #if is_valid:
+                    return corrected_chunk
+                    #else:
+                    #    print("Correction was invalid. Retrying...")
 
                 except Exception as e:
                     print(f"Parsing failed: {str(e)}. Retrying...")
@@ -147,7 +147,7 @@ def correct_subs_chunk_v3(sub_chunk, text, max_retries=3, delay=2):
     # If retries exhausted, raise error
     raise exceptions.CustomError('Failed to obtain a valid SRT response after multiple attempts.')
 
-def split_and_correct_srt(sub, text, chunk_size=200):
+def split_and_correct_srt(sub, text, chunk_size=100):
     """
     Splits the SRT file into chunks based on timestamps and calls correct_subs_chunk for each chunk.
     """
@@ -164,7 +164,7 @@ def split_and_correct_srt(sub, text, chunk_size=200):
 
             # If there's a large gap between the end of the current chunk and the start of the next, adjust the split
             if (next_timestamp - last_timestamp).total_seconds() > 1:
-                print(f"Splitting at chunk {i} with timestamp break.")
+                print(f"Splitting at line {i} with timestamp break.")
 
         # Call the correction function for each chunk
         try:
@@ -175,10 +175,11 @@ def split_and_correct_srt(sub, text, chunk_size=200):
 
     output = "sub_corrected.txt"
     with open(output, "a", encoding="utf-8") as out:
-        out.write(corrected_srt)
+        out.write(srt.compose(corrected_srt))
     try:
+        corrected_srt=correct_indices(corrected_srt)#fixed index
             # Attempt to parse the SRT content
-        aux_list = list(srt.parse(corrected_srt))
+        aux_list = corrected_srt
         return aux_list
     except Exception as e:
         raise exceptions.CustomError(f"SRT parsing failed: {str(e)}")
@@ -199,7 +200,7 @@ def compare_srt_lines(original_srt, revised_srt):
     revised_line_count = len(revised_srt)
 
     # Define acceptable change threshold (you can adjust this as needed)
-    acceptable_change_threshold = 3  # e.g., max 2 lines difference
+    acceptable_change_threshold = 8  # e.g., max 8 lines difference
 
     # Check if the number of lines is within acceptable limits
     if abs(original_line_count - revised_line_count) <= acceptable_change_threshold:
@@ -208,7 +209,27 @@ def compare_srt_lines(original_srt, revised_srt):
         return False, original_line_count, revised_line_count
 
 
+def correct_indices(srt_subtitles):
+    """
+    Corrects the indices of all subtitles in the SRT list, ensuring that
+    they are sequential from 1 onwards.
+    
+    Args:
+        srt_subtitles (list): List of parsed SRT subtitles where each subtitle is 
+                              in the format of a list with index, timestamp, and text.
 
+    Returns:
+        list: SRT list with corrected indices.
+    """
+    corrected_srt = []
+    
+    for idx, subtitle in enumerate(srt_subtitles, start=1):
+        # Assuming the subtitle format is: [index, timestamp, text]
+        if subtitle.content.strip():
+            subtitle.index = idx  # Correct the index
+            corrected_srt.append(subtitle)
+    
+    return corrected_srt
 '''
 ######
 def correct_subs(sub,text):

@@ -65,10 +65,10 @@ def principal(video_file,lan,llm_detection: bool,augmented_by_llm:bool):#funcion
          raise 
     except Exception:
          raise 
-
-    os.remove(audio_path)
-    if not any(ext in video_filename for ext in ["aac", "mp3", "flac"]): #es un video
-        os.remove(video_filename)
+    finally:
+        os.remove(audio_path)
+        if not any(ext in video_filename for ext in ["aac", "mp3", "flac"]): #es un video
+            os.remove(video_filename)
     return sub,text_correction
 
 backend_app = Flask(__name__)

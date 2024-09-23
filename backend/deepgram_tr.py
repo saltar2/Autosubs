@@ -7,7 +7,7 @@ config.read('.env')
 
 def process_chunk(chunk_index,aud_name, dg_client, size,language):#funcion peticion a la api
     #lan=language_codes[language]
-    for retry in range(3):
+    for retry in range(4):
         try:
             with open(f"vad_chunks/{aud_name}.wav", "rb") as f:
                 source = {'buffer': f, 'mimetype': 'audio/wav'}
@@ -69,7 +69,7 @@ def deepgram_tr(u, model_size,audio_nombre,language):
         os.remove(output2)
     #all_results = {}#debug file
     all_results_completed={}
-    workers=4 if str(model_size).__contains__('whisper') else 18
+    workers=5 if str(model_size).__contains__('whisper') else 12
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:#para cambiar numero de workers mira esto -> https://developers.deepgram.com/docs/getting-started-with-pre-recorded-audio#rate-limits
         futures = [executor.submit(process_chunk,i, f"{audio_nombre}_{i}", dg_client, model_size,language) for i in range(len(u))]
         
