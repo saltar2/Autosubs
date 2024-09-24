@@ -14,7 +14,7 @@ def process_chunk(chunk_index,aud_name, dg_client, size,language):#funcion petic
                 #options = {"model": size, "language": lan, "utterances": True,"smart_format": True, "timeout": 600}
                 options = {"model": size, "detect_language": True, "utterances": True, "timeout": 300, "diarize" : True,"smart_format":True}
                 response = dg_client.transcription.sync_prerecorded(source, options)
-
+                time.sleep(2)
             if len(response["results"]["utterances"]) > 0:
                 break
         except Exception as e:
@@ -69,7 +69,7 @@ def deepgram_tr(u, model_size,audio_nombre,language):
         os.remove(output2)
     #all_results = {}#debug file
     all_results_completed={}
-    workers=5 if str(model_size).__contains__('whisper') else 12
+    workers=4 if str(model_size).__contains__('whisper') else 12
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:#para cambiar numero de workers mira esto -> https://developers.deepgram.com/docs/getting-started-with-pre-recorded-audio#rate-limits
         futures = [executor.submit(process_chunk,i, f"{audio_nombre}_{i}", dg_client, model_size,language) for i in range(len(u))]
         
