@@ -99,7 +99,7 @@ def correct_subs_chunk_v3(sub_chunk, text, max_retries=3, delay=2):
             Ensure there are no extraneous characters like ``` at the beginning or end of the response; return only the corrected SRT content. \
             Take the time you need to perform the task accurately."
     
-    prompt_v2 = f"As an analyst, you are tasked to perform only the specific corrections listed for the given SRT file, according to the provided list of errors and explanations. 
+    prompt_v2 = f"As an analyst, you are tasked to perform only the specific corrections listed for the given SRT file, according to the provided list of errors and explanations. \
             You must not make any changes to lines that are not mentioned in the error list, even if they do not follow the formatting rules. \
             When you perform the indicated changes on the SRT file, please take these considerations into account: \
                 1. A subtitle must last a minimum of 1 second and a maximum of 8 seconds. \
