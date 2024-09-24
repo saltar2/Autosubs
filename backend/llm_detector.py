@@ -111,7 +111,7 @@ def correct_subs_chunk_v3(sub_chunk, text, max_retries=3, delay=2):
                 3. Before prepositions. \
             Finally, you have to return the entire SRT file in the same format as I sent you without any further information about the performed changes. \
             Ensure there are no extraneous characters like ``` at the beginning or end of the response; return only the corrected SRT content. \
-            Make sure to leave untouched all lines that are not explicitly listed in the error file.
+            Make sure to leave untouched all lines that are not explicitly listed in the error file. \
             Take the time you need to perform the task accurately."
 
     text_srt_chunk = f"SRT file ->\n {subtitle_chunk}"
