@@ -98,11 +98,27 @@ def correct_subs_chunk_v3(sub_chunk, text, max_retries=3, delay=2):
             Finally, you have to return the entire SRT file in the same format as I sent you without any further information about the performed changes. \
             Ensure there are no extraneous characters like ``` at the beginning or end of the response; return only the corrected SRT content. \
             Take the time you need to perform the task accurately."
+    
+    prompt_v2 = f"As an analyst, you are tasked to perform only the specific corrections listed for the given SRT file, according to the provided list of errors and explanations. 
+            You must not make any changes to lines that are not mentioned in the error list, even if they do not follow the formatting rules. 
+            When you perform the indicated changes on the SRT file, please take these considerations into account:
+                1. A subtitle must last a minimum of 1 second and a maximum of 8 seconds.
+                2. The maximum lines that can be shown together on screen are 2.
+                3. You can modify timestamps and content of only the subtitles that are specified in the error list, but the subtitles cannot be overlapping.
+            If any of the mentioned lines require text separation to fit these rules, use the following semantic separation:
+                1. After punctuation marks.
+                2. Before conjunctions.
+                3. Before prepositions.
+            Finally, you have to return the entire SRT file in the same format as I sent you without any further information about the performed changes. 
+            Ensure there are no extraneous characters like ``` at the beginning or end of the response; return only the corrected SRT content. 
+            Make sure to leave untouched all lines that are not explicitly listed in the error file.
+            Take the time you need to perform the task accurately.
+            "
 
     text_srt_chunk = f"SRT file ->\n {subtitle_chunk}"
     text_corrections = f"\n File with corrections suggested ->\n {text}"
 
-    sys_prompt = prompt
+    sys_prompt = prompt_v2
     user_prompt = text_srt_chunk + text_corrections
 
     # Ensure the token limit is respected
