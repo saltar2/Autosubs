@@ -239,8 +239,7 @@ def correct_indices(srt_subtitles):
     corrected_srt = []
     
     for idx, subtitle in enumerate(srt_subtitles, start=1):
-        # Assuming the subtitle format is: [index, timestamp, text]
-        if subtitle.content.strip():
+        if subtitle.content.strip():# si es una linea vacia no se añade.
             subtitle.index = idx  # Correct the index
             corrected_srt.append(subtitle)
     
