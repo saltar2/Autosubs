@@ -19,9 +19,11 @@ def process_chunk(chunk_index,aud_name, dg_client, size,language):#funcion petic
                 break
         except Exception as e:
             print(f"Intento {retry + 1} fallido para chunk {chunk_index}. Error: {e}")
-            if retry < 3:
+            if retry < 4:
                 print(f"Reintentando en 40 segundos...")
-                time.sleep(40)
+                if retry==3:
+                    time.sleep(30)
+                time.sleep(30)
             else:
                 print(f"Se alcanzó el número máximo de reintentos para chunk {chunk_index}. Terminando.")
                 #raise Exception('Revisa la peticion a la api o el status de la api')

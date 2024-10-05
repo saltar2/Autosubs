@@ -87,6 +87,7 @@ def main(audio_path,language,queue_event,llm_dtc:bool,llm_crt:bool):#version par
                         
                             
                         subs = future_nova.result()
+                        #other_subs=subs
                         other_subs = future_whisper.result()
                         final_subs=subs
                 else:
@@ -99,8 +100,10 @@ def main(audio_path,language,queue_event,llm_dtc:bool,llm_crt:bool):#version par
 
                 if llm_detection_hallucinations:
                     queue_event.put('Revisando transcripcion ...')
+                    print("Revisando transcripcion ...")
                     text_correction=llmdct.revisar_sub(subs,language,other_subs)
                     if llm_correction:
+                        print("Corrigiendo ...")
                         subs_revised=llmdct.split_and_correct_srt(subs,text_correction)
                         final_subs=subs_revised
 

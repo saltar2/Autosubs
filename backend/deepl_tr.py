@@ -28,7 +28,7 @@ def deepl_tr(subs,language,deepl_target_lang):
 
     grouped_lines = []
     english_lines = []
-    
+    print("Start deepl")
   
     #vamos agrupar por idioma detectado
     #https://github.com/pemistahl/lingua-py/tree/main
@@ -109,15 +109,35 @@ def deepl_tr(subs,language,deepl_target_lang):
     try:
         translator = deepl.Translator(deepl_authkey)
         for i, n in enumerate(tqdm(grouped_lines)):
-            x = ["|\n".join(n).strip()] #multiples lineas
-            #x=n
-            if language.lower() == "japanese":
-                result = translator.translate_text(x, source_lang="JA", target_lang=deepl_target_lang)
-            else:#default language
-                #result = translator.translate_text(x,source_lang='EN', target_lang=deepl_target_lang)
-                result = translator.translate_text(x, target_lang=deepl_target_lang)
-            english_tl = result[0].text.strip("|\n").splitlines()
-            #assert len(english_tl) == len(n), ("Invalid translation line count ("+ str(len(english_tl))+ " vs "+ str(len(n))+ ")")
+            max_retries = 3  # Número máximo de reintentos
+            retry_delay = 2  # Tiempo en segundos entre intentos
+            
+            for attempt in range(max_retries):
+                try:
+                    #x = [pattern.join(n).strip()] #multiples lineas
+                    x = [line.strip() for line in n]  # Cada línea de n es un elemento individual de la lista
+                    
+                    # Intentar traducir según el idioma especificado
+                    if language.lower() == "japanese":
+                        result = translator.translate_text(x, source_lang="JA", target_lang=deepl_target_lang)
+                    else:  # Idioma por defecto
+                        result = translator.translate_text(x, target_lang=deepl_target_lang)
+                    
+                    # Si la traducción es exitosa, procesar el resultado
+                    english_tl = [line.text.strip() for line in result]
+                    assert len(english_tl) == len(n), ("Invalid translation line count ("+ str(len(english_tl))+ " vs "+ str(len(n))+ ")")
+                    break  # Salir del bucle si la traducción fue exitosa
+
+                except Exception as e:
+                    print(f"Intento {attempt + 1} fallido: {str(e)}")
+                    if attempt < max_retries - 1:
+                        # Esperar un poco antes de reintentar
+                        time.sleep(retry_delay)
+                    else:
+                        # Si se agotaron los reintentos, tomar una acción alternativa
+                        print(f"Error persistente después de {max_retries} intentos.")
+                        english_tl = []  # O devolver un valor predeterminado en caso de fallo
+
 
             #if i != 0:#quitado para que no agrupe y traduzca linea a linea
                 #english_tl = english_tl[3:]
@@ -137,7 +157,7 @@ def deepl_tr(subs,language,deepl_target_lang):
                         english_lines.append(aux)'''
 
 
-            
+        print(f"english_lines len:{len(english_lines)} , subs len: {len(subs)}")   
         for i, e in enumerate(english_lines):
             subs[i].content = e
     except Exception as e:
@@ -151,6 +171,7 @@ def deepl_tr(subs,language,deepl_target_lang):
     #with open(out_path, "w", encoding="utf8") as f:
     #    f.write(srt.compose(subs))
     #print("\nDone! Subs written to", out_path)
+    print("Pass deepl")
     return subs
     
 
