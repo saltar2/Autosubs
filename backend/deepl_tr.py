@@ -1,5 +1,5 @@
 
-import languagecodes,unicodedata,configparser,deepl,exceptions
+import languagecodes,unicodedata,configparser,deepl,exceptions,time
 from lingua import LanguageDetectorBuilder
 from tqdm import tqdm
 
