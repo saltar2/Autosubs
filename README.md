@@ -14,7 +14,7 @@
 
 Para ejecutar Autosubs, necesitarás tener instalado lo siguiente en tu sistema:
 
-- **Docker:** Debes poder lanzar, contruir instancias con docker y tambien servicios con docker-compose
+- **Docker:** Debes poder lanzar, construir instancias con docker y tambien servicios con docker compose
 
 ## Claves de API
 
