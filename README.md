@@ -49,7 +49,7 @@ Antes de ejecutar Autosubs, asegúrate de descargar el video que deseas procesar
 
 Ejecutar Autosubs con docker, sigue estos pasos:
 
-        docker-compose up --build
+        docker compose up --build
 
 Acceso a la web:
 
